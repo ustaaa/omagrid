@@ -81,3 +81,7 @@ People trust GridCraft with their numbers; a crash loses their work. **This outr
   GitHub profiles). Never hand-edit `contributors.json`.
 - Maintainers refresh the stats with `python3 ../../craftrules/scripts/contributors.py .` (it also
   re-verifies who wrote each `people.toml` entry; `--check` only verifies).
+
+## Cost-aware delegation
+
+For routine coding, identity renames, packaging, test helpers, and documentation, delegate to Halogen or another explicitly selected lower-cost subagent. Reserve Astra for architecture, difficult debugging, and final review when needed. Subagents inherit the parent model unless explicitly selected, so always specify the intended lower-cost model for routine work. Verify generated changes and tests. If Halogen is unavailable, do independent useful work or use a suitable lower-cost alternative, and report the limitation; do not silently move bulk work to a costly model. Do not change providers, global defaults, or infrastructure.
