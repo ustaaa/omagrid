@@ -4,8 +4,12 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish = false
-default-run = "gridcraft"
-description = "GridCraft desktop app"
+default-run = "omagrid"
+description = "OmaGrid desktop spreadsheet"
+
+[[bin]]
+name = "omagrid"
+path = "src/main.rs"
 
 [lints]
 workspace = true
@@ -31,7 +35,6 @@ winit = { version = "0.30", default-features = false, features = ["x11"] }
 # Same craft-libs revision as the workspace's craft-update and craft-window (see the root
 # Cargo.toml).
 craft-print = { git = "https://github.com/storytold/craft-libs", rev = "92d392cff132eaf53e13afff77f38b5c11b73aa0" }
-craft-update = { workspace = true }
 rfd = { workspace = true }
 arboard = { workspace = true }
 gridcraft-mcp = { workspace = true }

@@ -124,7 +124,7 @@ pub fn show(app: &mut SheetApp, ctx: &egui::Context) {
         "pasteSpecial" => 480.0,
         _ => 380.0,
     };
-    let window = egui::Window::new(app.ui.language.tr(&d.title))
+    let window = egui::Window::new(app.ui.language.product_label(&d.title))
         .id(egui::Id::unique("dialog").with(&d.name))
         .collapsible(false)
         .resizable(false)
@@ -162,9 +162,9 @@ pub fn show(app: &mut SheetApp, ctx: &egui::Context) {
                 "solverResults" => solver_results(app, ui, &mut d, &mut open),
                 "spelling" => spelling(app, ui, &mut d, &mut open),
                 "agents" => {
-                    ui.label("GridCraft is fully drivable by agents. Every menu item, button and gesture is a command:");
+                    ui.label("OmaGrid is fully drivable by agents. Every menu item, button and gesture is a command:");
                     ui.add_space(4.0);
-                    ui.monospace("gridcraft --control 7979        # JSON-lines control channel\ngridcraft-cli mcp --connect 7979   # MCP bridged to this window\ngridcraft-cli mcp                   # headless MCP server");
+                    ui.monospace("omagrid --control 7979        # JSON-lines control channel\nomagrid-cli mcp --connect 7979   # MCP bridged to this window\nomagrid-cli mcp                   # headless MCP server");
                     ui.add_space(4.0);
                     ui.label(format!("{} engine commands are available. See docs/mcp.md and docs/control-protocol.md.", gridcraft_engine::command_specs().len()));
                 }

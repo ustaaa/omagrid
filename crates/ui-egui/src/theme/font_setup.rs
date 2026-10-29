@@ -29,6 +29,11 @@ pub const UI: &str = "ui";
 
 pub const UI_BOLD: &str = "ui-bold";
 
+/// Document drawing that historically used the interface fallback must retain that face when
+/// the desktop's chrome font changes (chart labels and printed header/footer text).
+pub const DOCUMENT_UI: &str = "document-ui";
+pub const DOCUMENT_UI_BOLD: &str = "document-ui-bold";
+
 pub const CELL: &str = "cell";
 
 pub const CELL_BOLD: &str = "cell-bold";
@@ -47,6 +52,14 @@ pub fn ui_font(size: f32) -> FontId {
 
 pub fn ui_bold(size: f32) -> FontId {
     FontId::new(size, FontFamily::Name(UI_BOLD.into()))
+}
+
+pub fn document_ui_font(size: f32) -> FontId {
+    FontId::new(size, FontFamily::Name(DOCUMENT_UI.into()))
+}
+
+pub fn document_ui_bold(size: f32) -> FontId {
+    FontId::new(size, FontFamily::Name(DOCUMENT_UI_BOLD.into()))
 }
 
 /// The font family to use for a cell font name and weight.
@@ -467,6 +480,12 @@ fn font_definitions_impl(language: crate::i18n::Language, used: &[String], syste
     // leads, and the barred Noto CJK collection never enters.
     append_craft_faces(&mut fonts);
     drop_unparseable_fonts(&mut fonts);
+    for (source, document) in [(UI, DOCUMENT_UI), (UI_BOLD, DOCUMENT_UI_BOLD)] {
+        if let Some(chain) = fonts.families.get(&FontFamily::Name(source.into())).cloned() {
+            fonts.families.insert(FontFamily::Name(document.into()), chain);
+            bound.push(document.to_string());
+        }
+    }
     // Only families egui still has data for count as bound (a dropped face can empty a chain).
     bound.retain(|f| fonts.families.get(&FontFamily::Name(f.as_str().into())).is_some_and(|c| !c.is_empty()));
     crate::fonts::set_bound(bound);

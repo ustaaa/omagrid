@@ -15,12 +15,13 @@ pub(super) fn about(ui: &mut egui::Ui, d: &mut Dialog) {
         "Contributors" => crate::credits::contributors_ui(ui),
         "Models" => crate::credits::models_ui(ui),
         _ => {
-            ui.heading("GridCraft");
-            ui.label(format!("Version {}", env!("CARGO_PKG_VERSION")));
+            ui.heading("OmaGrid");
+            ui.label("OmaGrid development • based on GridCraft v0.13.0 (43284377)");
             ui.add_space(4.0);
-            ui.label("A clean-room, open-source, Rust-native spreadsheet. Part of ArtCraft.");
-            ui.hyperlink_to("getartcraft.com/apps/gridcraft", "https://getartcraft.com/apps/gridcraft");
-            ui.hyperlink_to("Join the ArtCraft Discord", "https://discord.gg/artcraft");
+            ui.label("A native spreadsheet for Omarchy and Linux. An independent fork of GridCraft.");
+            ui.hyperlink_to("OmaGrid source", "https://github.com/ustaaa/omagrid");
+            ui.hyperlink_to("Upstream GridCraft and contributors", "https://github.com/storytold/gridcraft");
+            ui.label("MIT OR Apache-2.0. Upstream copyright and contributor credits are preserved.");
         }
     }
 }

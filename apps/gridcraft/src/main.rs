@@ -1,8 +1,8 @@
-//! GridCraft desktop app.
+//! OmaGrid desktop app.
 //!
-//! Usage: `gridcraft [--control <port> [--control-token <token>]] [--sample <name>] [files…]`
+//! Usage: `omagrid [--control <port> [--control-token <token>]] [--sample <name>] [files…]`
 //!
-//! `--control <port>` (or `GRIDCRAFT_CONTROL_PORT`) starts a localhost JSON-lines control
+//! `--control <port>` (or `OMAGRID_CONTROL_PORT`) starts a localhost JSON-lines control
 //! server: `{"id":1,"method":"ui.inspect","params":{}}` → `{"id":1,"ok":true,"result":…}`.
 //! The first line of each connection must carry the token (`docs/control-protocol.md`).
 //! See `gridcraft_ui_egui::control` and `docs/control-protocol.md` for the methods.
@@ -79,21 +79,21 @@ impl eframe::App for App {
 
 fn config_dir() -> Option<std::path::PathBuf> {
     if cfg!(target_os = "macos") {
-        std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join("Library/Application Support/GridCraft"))
+        std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join("Library/Application Support/OmaGrid"))
     } else if cfg!(windows) {
-        std::env::var_os("APPDATA").map(|a| std::path::PathBuf::from(a).join("GridCraft"))
+        std::env::var_os("APPDATA").map(|a| std::path::PathBuf::from(a).join("OmaGrid"))
     } else {
         std::env::var_os("XDG_CONFIG_HOME")
             .map(std::path::PathBuf::from)
             .or_else(|| std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join(".config")))
-            .map(|c| c.join("gridcraft"))
+            .map(|c| c.join("omagrid"))
     }
 }
 
 /// Runs without preferences (`GRIDCRAFT_NO_PREFS`, agents' test runs) neither read nor write
 /// them, and keep no log file.
 fn prefs_enabled() -> bool {
-    std::env::var_os("GRIDCRAFT_NO_PREFS").is_none()
+    std::env::var_os("OMAGRID_NO_PREFS").is_none() && std::env::var_os("GRIDCRAFT_NO_PREFS").is_none()
 }
 
 /// Where the log files live: `logs` in the settings folder, next to `ui.json` (see `logging`).
@@ -226,9 +226,9 @@ fn open_with_system(target: &str) {
 
 fn icon() -> Option<egui::IconData> {
     #[cfg(target_os = "macos")]
-    let bytes = include_bytes!("../../../assets/app-icon/gridcraft-macos-512.png");
+    let bytes = include_bytes!("../../../assets/omagrid-icon/512/io.github.ustaaa.OmaGrid.png");
     #[cfg(not(target_os = "macos"))]
-    let bytes = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.gridcraft.png");
+    let bytes = include_bytes!("../../../assets/omagrid-icon/256/io.github.ustaaa.OmaGrid.png");
     let img = image::load_from_memory(bytes).ok()?.to_rgba8();
     Some(egui::IconData { width: img.width(), height: img.height(), rgba: img.into_raw() })
 }
@@ -251,24 +251,18 @@ fn main() -> eframe::Result<()> {
             log::error!("{report}");
         } else {
             // `eprintln!` panics on a broken stderr pipe, and a panic inside the panic hook aborts.
-            let _ = std::io::Write::write_fmt(&mut std::io::stderr(), format_args!("gridcraft: {report}\n"));
+            let _ = std::io::Write::write_fmt(&mut std::io::stderr(), format_args!("omagrid: {report}\n"));
         }
     }));
     let args: Vec<String> = std::env::args().skip(1).collect();
-    // The restart helper a self-update spawns: it finishes the swap and relaunches, then exits.
-    if let Some(done) = craft_update::self_update::finish(&craft_update::suite::GRIDCRAFT, &std::env::args_os().skip(1).collect::<Vec<_>>()) {
-        if let Err(e) = done {
-            eprintln!("GridCraft update helper failed: {e}");
-            std::process::exit(1);
-        }
-        return Ok(());
-    }
+    // OmaGrid never executes the upstream binary replacement helper.
     if args.iter().any(|a| a == "--version" || a == "-V") {
-        println!("GridCraft {}", env!("CARGO_PKG_VERSION"));
+        println!("OmaGrid {}", env!("CARGO_PKG_VERSION"));
         return Ok(());
     }
-    let mut control_port: Option<u16> = std::env::var("GRIDCRAFT_CONTROL_PORT").ok().and_then(|p| p.parse().ok());
-    let mut control_token: Option<String> = std::env::var("GRIDCRAFT_CONTROL_TOKEN").ok();
+    let mut control_port: Option<u16> =
+        std::env::var("OMAGRID_CONTROL_PORT").or_else(|_| std::env::var("GRIDCRAFT_CONTROL_PORT")).ok().and_then(|p| p.parse().ok());
+    let mut control_token: Option<String> = gridcraft_mcp::control_auth::configured_token();
     let mut sample: Option<String> = None;
     let mut files: Vec<String> = Vec::new();
     let mut i = 0;
@@ -298,7 +292,7 @@ fn main() -> eframe::Result<()> {
     if let Some(logger) = logger {
         match log_dir().filter(|_| prefs_enabled()) {
             Some(dir) => match logger.attach_dir(&dir) {
-                Ok(path) => log::info!("GridCraft {}, log file {}", env!("CARGO_PKG_VERSION"), path.display()),
+                Ok(path) => log::info!("OmaGrid {}, log file {}", env!("CARGO_PKG_VERSION"), path.display()),
                 // Standard error only by now (`attach_dir` gave up on the file); unlike `eprintln!`, never panics.
                 Err(e) => log::warn!("no log file: {e}"),
             },
@@ -316,7 +310,6 @@ fn main() -> eframe::Result<()> {
     }
     let mut app = SheetApp::new(session, services());
     app.watch_desktop_theme();
-    app.start_update_check();
     app.after_engine(); // Show warnings from the sample.
     let control_port = control_port;
     load_prefs(&mut app);
@@ -327,10 +320,10 @@ fn main() -> eframe::Result<()> {
         app.open_path(f);
     }
     let mut viewport = egui::ViewportBuilder::default()
-        .with_title("GridCraft")
+        .with_title("OmaGrid")
         .with_inner_size([1440.0, 900.0])
         .with_min_inner_size([640.0, 420.0])
-        .with_app_id("ai.storyteller.gridcraft")
+        .with_app_id("io.github.ustaaa.OmaGrid")
         .with_drag_and_drop(true);
     if cfg!(target_os = "macos") {
         viewport = viewport.with_fullsize_content_view(true).with_titlebar_shown(false).with_title_shown(false);
@@ -342,11 +335,13 @@ fn main() -> eframe::Result<()> {
     let options = eframe::NativeOptions { viewport, ..Default::default() };
     #[cfg(all(unix, not(target_os = "macos")))]
     let mut options = options;
-    // winit has no file drag-and-drop on Wayland (only on X11), so dropping files from the file
-    // manager showed a "no" cursor. Run through XWayland when it's there; GRIDCRAFT_WAYLAND=1
-    // keeps the native Wayland backend.
+    // Preserve the upstream backend default until native Wayland passes our runtime gate.
+    // OMAGRID_WAYLAND=1 (legacy GRIDCRAFT_WAYLAND=1) opts into native Wayland.
     #[cfg(all(unix, not(target_os = "macos")))]
-    if std::env::var_os("DISPLAY").is_some_and(|d| !d.is_empty()) && std::env::var_os("GRIDCRAFT_WAYLAND").is_none() {
+    if std::env::var_os("DISPLAY").is_some_and(|d| !d.is_empty())
+        && std::env::var_os("OMAGRID_WAYLAND").is_none()
+        && std::env::var_os("GRIDCRAFT_WAYLAND").is_none()
+    {
         options.event_loop_builder = Some(Box::new(|b| {
             use winit::platform::x11::EventLoopBuilderExtX11;
             b.with_x11();
@@ -375,7 +370,7 @@ fn main() -> eframe::Result<()> {
     let pending = std::cell::Cell::new(Some(app));
     let run = |options: eframe::NativeOptions| {
         eframe::run_native(
-            "GridCraft",
+            "OmaGrid",
             options,
             Box::new(|cc| {
                 let Some(mut app) = pending.take() else {
@@ -421,6 +416,14 @@ fn main() -> eframe::Result<()> {
 mod packaging_tests {
     use gridcraft_engine::io::FileKind;
 
+    #[test]
+    fn preferences_and_logs_are_isolated_from_gridcraft() {
+        let dir = super::config_dir().expect("test host needs its user configuration directory");
+        let name = if cfg!(any(target_os = "macos", windows)) { "OmaGrid" } else { "omagrid" };
+        assert_eq!(dir.file_name().and_then(|name| name.to_str()), Some(name));
+        assert_eq!(super::log_dir(), Some(dir.join("logs")));
+    }
+
     /// The text between `start` and `end` that follows each `marker` in `text`, sorted (e.g. the
     /// `xlsb` in `Classes\.xlsb\OpenWithProgids`).
     fn extensions(text: &str, marker: &str, start: &str, end: char) -> Vec<String> {
@@ -429,8 +432,8 @@ mod packaging_tests {
         v
     }
 
-    /// macOS Open With (`CFBundleDocumentTypes`) offers GridCraft for the same files as Windows
-    /// Open with, and GridCraft opens each of them. #321 added `.xlsb` and `.ods` on Windows and
+    /// macOS Open With (`CFBundleDocumentTypes`) offers OmaGrid for the same files as Windows
+    /// Open with, and OmaGrid opens each of them. #321 added `.xlsb` and `.ods` on Windows and
     /// Linux only.
     #[test]
     fn macos_and_windows_offer_the_same_file_types() {
@@ -441,7 +444,7 @@ mod packaging_tests {
         assert!(mac.iter().any(|e| e == "xlsx"), "Info.plist.in extensions not found: {mac:?}");
         assert_eq!(mac, win);
         for ext in &mac {
-            assert!(FileKind::from_path(&format!("book.{ext}")).is_some(), "GridCraft doesn't open .{ext}");
+            assert!(FileKind::from_path(&format!("book.{ext}")).is_some(), "OmaGrid doesn't open .{ext}");
         }
     }
 }

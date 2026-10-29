@@ -1,22 +1,22 @@
-# Flatpak manifest for GridCraft, ready for a Flathub submission.
+# Experimental Flatpak manifest for OmaGrid; runtime acceptance is required before release.
 #
 # Flatpak builds run offline, so the crate sources must be vendored first. From the repo root:
 #
 #   curl -fsSLO https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/master/cargo/flatpak-cargo-generator.py
 #   python3 flatpak-cargo-generator.py Cargo.lock -o packaging/linux/flatpak/cargo-sources.json
-#   flatpak-builder --user --install --force-clean build-flatpak packaging/linux/flatpak/ai.storyteller.gridcraft.yml
-#   flatpak run ai.storyteller.gridcraft
+#   flatpak-builder --user --install --force-clean build-flatpak packaging/linux/flatpak/io.github.ustaaa.OmaGrid.yml
+#   flatpak run io.github.ustaaa.OmaGrid
 #
 # For Flathub, replace the `dir` source with a `git` source pinned to a release tag and commit.
-# The single-file .flatpak attached to each release comes from ai.storyteller.gridcraft.bundle.yml,
+# A local single-file .flatpak can be built from io.github.ustaaa.OmaGrid.bundle.yml,
 # which repackages the prebuilt release binaries. Keep runtime-version and finish-args identical.
-id: ai.storyteller.gridcraft
+id: io.github.ustaaa.OmaGrid
 runtime: org.freedesktop.Platform
 runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.rust-stable
-command: gridcraft
+command: omagrid
 finish-args:
   # Display: Wayland first; X11 only when no Wayland compositor is running.
   - --socket=wayland
@@ -30,32 +30,36 @@ finish-args:
   # opening workbooks by path from the command line.
   - --filesystem=xdg-documents
   - --filesystem=xdg-download
+  # Read only the active Omarchy palette, across v3 and v4 layouts.
+  - --filesystem=~/.local/state/omarchy/current:ro
+  - --filesystem=xdg-config/omarchy/current:ro
   # Deliberately not granted: network (the optional --control channel listens on 127.0.0.1 in
-  # the sandbox; `flatpak override --user --share=network ai.storyteller.gridcraft` exposes it to
+  # the sandbox; `flatpak override --user --share=network io.github.ustaaa.OmaGrid` exposes it to
   # host agents) and home/host filesystem access.
 build-options:
   append-path: /usr/lib/sdk/rust-stable/bin
 modules:
-  - name: gridcraft
+  - name: omagrid
     buildsystem: simple
     build-options:
       env:
-        CARGO_HOME: /run/build/gridcraft/cargo
+        CARGO_HOME: /run/build/omagrid/cargo
         CARGO_NET_OFFLINE: 'true'
     build-commands:
       - cargo --offline build --release --locked -p gridcraft -p gridcraft-cli
-      - install -Dm755 target/release/gridcraft /app/bin/gridcraft
-      - install -Dm755 target/release/gridcraft-cli /app/bin/gridcraft-cli
-      - install -Dm644 packaging/linux/ai.storyteller.gridcraft.desktop /app/share/applications/ai.storyteller.gridcraft.desktop
-      - install -Dm644 packaging/linux/ai.storyteller.gridcraft.mime.xml /app/share/mime/packages/ai.storyteller.gridcraft.xml
-      - mkdir -p /app/share/icons && cp -R assets/app-icon/hicolor /app/share/icons/
-      - install -Dm644 NOTICE /app/share/doc/gridcraft/NOTICE
-      - install -Dm644 ATTRIBUTION.md /app/share/doc/gridcraft/ATTRIBUTION.md
+      - install -Dm755 target/release/omagrid /app/bin/omagrid
+      - install -Dm755 target/release/omagrid-cli /app/bin/omagrid-cli
+      - install -Dm644 packaging/linux/io.github.ustaaa.OmaGrid.desktop /app/share/applications/io.github.ustaaa.OmaGrid.desktop
+      - install -Dm644 packaging/linux/io.github.ustaaa.OmaGrid.mime.xml /app/share/mime/packages/io.github.ustaaa.OmaGrid.xml
+      - install -Dm644 assets/omagrid-icon/256/io.github.ustaaa.OmaGrid.png /app/share/icons/hicolor/256x256/apps/io.github.ustaaa.OmaGrid.png
+      - install -Dm644 assets/omagrid-icon/io.github.ustaaa.OmaGrid.svg /app/share/icons/hicolor/scalable/apps/io.github.ustaaa.OmaGrid.svg
+      - install -Dm644 NOTICE /app/share/doc/omagrid/NOTICE
+      - install -Dm644 ATTRIBUTION.md /app/share/doc/omagrid/ATTRIBUTION.md
       - >-
         version=$(awk '/^\[/{p=($0=="[workspace.package]");next} p&&$1=="version"{gsub(/[" ]/,"",$3);print $3;exit}' Cargo.toml);
         install -d /app/share/metainfo;
         sed -e "s/@VERSION@/$version/" -e "s/@DATE@/$(date -u +%Y-%m-%d)/"
-        packaging/linux/ai.storyteller.gridcraft.metainfo.xml.in > /app/share/metainfo/ai.storyteller.gridcraft.metainfo.xml
+        packaging/linux/io.github.ustaaa.OmaGrid.metainfo.xml.in > /app/share/metainfo/io.github.ustaaa.OmaGrid.metainfo.xml
     sources:
       - type: dir
         path: ../../..

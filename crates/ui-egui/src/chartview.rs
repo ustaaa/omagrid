@@ -21,7 +21,7 @@ struct EguiMeasure<'a> {
 
 impl gridcraft_chart::Measure for EguiMeasure<'_> {
     fn text_width(&self, text: &str, size: f32, bold: bool) -> f32 {
-        let font = if bold { theme::ui_bold(size * self.z) } else { theme::ui_font(size * self.z) };
+        let font = if bold { theme::document_ui_bold(size * self.z) } else { theme::document_ui_font(size * self.z) };
         self.painter.layout_no_wrap(text.to_string(), font, Color32::BLACK).size().x / self.z.max(0.01)
     }
 }
@@ -119,7 +119,7 @@ pub fn paint_prims(p: &Painter, origin: Pos2, prims: &[Prim], z: f32) {
                 }
             }
             Prim::Text { x, y, text, size, color, bold, align, valign, rotation } => {
-                let font: FontId = if *bold { theme::ui_bold(size * z) } else { theme::ui_font(size * z) };
+                let font: FontId = if *bold { theme::document_ui_bold(size * z) } else { theme::document_ui_font(size * z) };
                 let galley = p.layout_no_wrap(text.clone(), font, rgba(*color));
                 let sz = galley.size();
                 let ax = match align {
@@ -421,7 +421,8 @@ pub fn slicer_layout(rect: Rect, z: f32, n: usize, columns: u32) -> SlicerLayout
 }
 
 fn paint_slicers(app: &SheetApp, p: &Painter, geo: &Geo, wb: &Workbook, si: usize, sh: &Sheet) {
-    let tk = theme::Tokens::get(p.ctx());
+    // Slicers are workbook objects: retain the upstream document palette, not the desktop accent.
+    let tk = if p.ctx().global_style().visuals.dark_mode { Tokens::dark() } else { Tokens::light() };
     for sl in &sh.slicers {
         let r = anchor_rect(geo, sh, &sl.anchor);
         if !r.intersects(p.clip_rect()) {
@@ -438,7 +439,7 @@ fn paint_slicers(app: &SheetApp, p: &Painter, geo: &Geo, wb: &Workbook, si: usiz
         p.rect_filled(lay.header, radius, tk.accent_soft);
         p.rect_filled(Rect::from_min_max(pos2(lay.header.left(), lay.header.bottom() - radius), lay.header.max), 0.0, tk.accent_soft);
         let cap = if sl.caption.is_empty() { sl.column.clone() } else { sl.caption.clone() };
-        p.text(lay.header.left_center() + vec2(8.0 * geo.z, 0.0), Align2::LEFT_CENTER, cap, theme::ui_bold(12.5 * geo.z), tk.accent_dark);
+        p.text(lay.header.left_center() + vec2(8.0 * geo.z, 0.0), Align2::LEFT_CENTER, cap, theme::document_ui_bold(12.5 * geo.z), tk.accent_dark);
         // Clear-filter button (tinted when a filter is active).
         let filtered = sl.selected.is_some();
         if let Some(icon) = crate::icons::from_name("filter") {
@@ -452,7 +453,7 @@ fn paint_slicers(app: &SheetApp, p: &Painter, geo: &Geo, wb: &Workbook, si: usiz
             let (fill, fg) = if *on { (tk.accent, tk.on_accent) } else { (tk.hover, tk.text_dim) };
             p.rect_filled(*tr, 3.0 * geo.z, fill);
             let cp = p.with_clip_rect(tr.intersect(p.clip_rect()));
-            cp.text(tr.left_center() + vec2(6.0 * geo.z, 0.0), Align2::LEFT_CENTER, val, theme::ui_font(12.0 * geo.z), fg);
+            cp.text(tr.left_center() + vec2(6.0 * geo.z, 0.0), Align2::LEFT_CENTER, val, theme::document_ui_font(12.0 * geo.z), fg);
         }
         if app.selected_chart == Some(sl.id) {
             selection_frame(p, r);
