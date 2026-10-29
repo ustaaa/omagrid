@@ -34,7 +34,7 @@ desktop = configparser.ConfigParser(interpolation=None)
 desktop.optionxform = str
 desktop.read(linux / f"{APP_ID}.desktop")
 entry = desktop["Desktop Entry"]
-for key, value in {"Name": "OmaGrid", "Exec": "omagrid %F", "TryExec": "omagrid", "Icon": APP_ID, "StartupWMClass": APP_ID}.items():
+for key, value in {"Name": "OmaGrid", "Exec": "env OMAGRID_WAYLAND=1 omagrid %F", "TryExec": "omagrid", "Icon": APP_ID, "StartupWMClass": APP_ID}.items():
     require(entry.get(key) == value, f"Desktop {key} must be {value}")
 
 metadata = ET.fromstring((linux / f"{APP_ID}.metainfo.xml.in").read_text())

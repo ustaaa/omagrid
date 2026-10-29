@@ -68,8 +68,21 @@ Final tarball SHA256:
 Remaining gates: real Windows Excel/versioned external corpus, GNOME session, file portals,
 clipboard between applications, drag-and-drop, physical Turkish keyboard/AltGr/IME,
 screen reader, full scale matrix, multi-window stress and physical latency measurements.
-The updater remains disabled, and native Wayland remains opt-in until its outstanding
-integration gates pass. No public package-store release has occurred.
+The updater remains disabled. A later DPI follow-up changed the desktop launcher and
+pilot installer to set `OMAGRID_WAYLAND=1`: the user-opened window had taken the XWayland
+fallback at monitor scale 1.6 because `DISPLAY` was also available. The existing binary
+already supports native selection, so no engine or executable change was required.
+This launcher decision does not close the outstanding native integration gates above.
+Direct terminal launches retain the original backend default; see README for explicit
+native and X11 fallback commands. No public package-store release has occurred.
+
+The updated desktop entry was launched with `gtk-launch` on OmarchyMax. Its new window
+reported `xwayland: false`, while the user's existing Book1 window stayed open untouched.
+At scale 1.6, UI inspection measured 786.25×646.875 logical pixels and the screenshot
+measured 1258×1035 physical pixels, an exact 1.6 ratio. The before/after visual check
+confirmed correct scaling. Evidence: `dist/validation/dpi-160/omagrid-dpi-before.png`
+and `omagrid-dpi-after.png`. Installer regression tests also passed for a fresh install
+and upgrade from a legacy desktop entry, including an installation path with spaces.
 
 The limited performance smoke measured median first completed screenshot at 393.8 ms
 (upstream) versus 413.2 ms (fork), and idle RSS at 179.8 versus 183.3 MiB. All six

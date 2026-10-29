@@ -176,7 +176,9 @@ def main():
             text = desktop.read_text()
             if len(re.findall(r'^Exec=.*$', text, re.M)) != 1 or len(re.findall(r'^TryExec=.*$', text, re.M)) != 1:
                 fail('Expected exactly one Exec and TryExec in the desktop entry.')
-            text = re.sub(r'^Exec=.*$', lambda _: f'Exec="{escaped}" %F', text, flags=re.M)
+            # Prefer native Wayland on scaled desktops; the existing binary otherwise forces
+            # X11 whenever DISPLAY is set, including Hyprland's XWayland compatibility display.
+            text = re.sub(r'^Exec=.*$', lambda _: f'Exec=env OMAGRID_WAYLAND=1 "{escaped}" %F', text, flags=re.M)
             text = re.sub(r'^TryExec=.*$', lambda _: 'TryExec=' + executable.replace('\\', '\\\\').replace('\t', '\\t'), text, flags=re.M)
             desktop.write_text(text)
             (staging / marker).write_text(json.dumps({'installer': 'omagrid-pilot/1', 'id': a.id, 'appId': APP}) + '\n')

@@ -45,15 +45,35 @@ The installed app was left open on a synthetic Sales sample with native Wayland,
 control port 18794, using the actual user theme. This is a preview, not production acceptance.
 
 ```sh
-~/.local/bin/omagrid                           # normal launcher behavior
-OMAGRID_WAYLAND=1 ~/.local/bin/omagrid          # tested native Wayland opt-in
+OMAGRID_WAYLAND=1 ~/.local/bin/omagrid          # same native selection as the desktop launcher
+env -u OMAGRID_WAYLAND -u GRIDCRAFT_WAYLAND ~/.local/bin/omagrid  # explicit X11 fallback with DISPLAY
 bash ~/Development/omagrid/packaging/linux/install-pilot.sh --uninstall
 ```
 
 Uninstall removes only managed launcher links and retains version folders.
-The default retains upstream X11 fallback when DISPLAY is set until portal,
-clipboard and drag-and-drop gates pass. Both the desktop launcher/XWayland path
-and explicit native Wayland path were launched successfully on OmarchyMax.
+The Linux desktop entry and installer now set `OMAGRID_WAYLAND=1`. The DPI follow-up
+found the user's launcher-created window running under XWayland on a 5120×2160
+monitor at scale 1.6; `DISPLAY` had triggered the binary's upstream X11 fallback.
+The launcher flag allows native Wayland selection and direct compositor scale handling.
+Direct shell launches still use the original fallback unless the flag is set. No binary
+or engine change is needed. On X11-only sessions, winit can still select X11.
+Both backend paths had previously launched successfully; portal, external clipboard,
+file drag-and-drop and the complete scale matrix remain unverified acceptance gates.
+
+Launcher regression checks exercise a temporary home containing spaces, a fresh install,
+and an upgrade from an older archive whose desktop file lacks the flag. They assert the
+native flag, correctly quoted absolute executable and `%F` survive installer rewriting.
+The separate runtime follow-up preserves the user's currently open workbook while
+checking a new native window; it must not close the old process to apply this change.
+
+Runtime DPI verification on OmarchyMax passed: launching the updated desktop entry with
+`gtk-launch` created PID 439214 with `xwayland: false`; the original Book1 PID 429143
+remained open and untouched with `xwayland: true`. At monitor scale 1.6, `ui.inspect`
+reported 786.25×646.875 logical pixels and the captured window was 1258×1035 physical
+pixels, exactly the expected ratio. Before/after images are retained under
+`dist/validation/dpi-160/omagrid-dpi-{before,after}.png`. The previous installed desktop
+entry was backed up as `.desktop.before-wayland`. This verifies launch and scaling,
+not the outstanding portal/clipboard/drag-and-drop gates.
 
 ## Evidence and reproduction
 

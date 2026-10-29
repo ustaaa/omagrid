@@ -4,6 +4,7 @@ from pathlib import Path
 import io
 import os
 import platform
+import shlex
 import struct
 import subprocess
 import sys
@@ -23,7 +24,7 @@ def invoke(home, *args, ok=True):
     return result.stdout + result.stderr
 
 
-def fixture(path, extra=None):
+def fixture(path, extra=None, legacy_desktop=False):
     with tarfile.open(path, 'w:gz') as archive:
         def add(name, data, mode=0o644):
             item = tarfile.TarInfo('omagrid-test/' + name)
@@ -35,7 +36,11 @@ def fixture(path, extra=None):
         elf[18:20] = struct.pack('<H', 62 if platform.machine() == 'x86_64' else 183)
         for name in ('omagrid', 'omagrid-cli'):
             add('bin/' + name, elf, 0o755)
-        add(f'share/applications/{APP}.desktop', (ROOT / f'packaging/linux/{APP}.desktop').read_bytes())
+        desktop = (ROOT / f'packaging/linux/{APP}.desktop').read_text()
+        assert 'Exec=env OMAGRID_WAYLAND=1 omagrid %F' in desktop, 'Packaged launcher must prefer native Wayland'
+        if legacy_desktop:
+            desktop = desktop.replace('Exec=env OMAGRID_WAYLAND=1 omagrid %F', 'Exec=omagrid %F')
+        add(f'share/applications/{APP}.desktop', desktop.encode())
         for size in (16, 24, 32, 48, 64, 128, 256, 512):
             add(f'share/icons/hicolor/{size}x{size}/apps/{APP}.png', (ROOT / f'assets/omagrid-icon/{size}/{APP}.png').read_bytes())
         add(f'share/icons/hicolor/scalable/apps/{APP}.svg', (ROOT / f'assets/omagrid-icon/{APP}.svg').read_bytes())
@@ -54,11 +59,16 @@ with tempfile.TemporaryDirectory(prefix='omagrid-installer-test-') as temporary:
     invoke(home, archive, 'first')
     base = home / '.local/share/omagrid'
     desktop = (home / f'.local/share/applications/{APP}.desktop').read_text()
-    assert f'Exec="{base}/current/bin/omagrid" %F' in desktop
+    expected_exec = ['env', 'OMAGRID_WAYLAND=1', str(base / 'current/bin/omagrid'), '%F']
+    assert shlex.split(next(line[5:] for line in desktop.splitlines() if line.startswith('Exec='))) == expected_exec
     assert f'TryExec={base}/current/bin/omagrid' in desktop
     invoke(home, archive, 'first', ok=False)
-    invoke(home, archive, 'second')
+    legacy_archive = root / 'legacy.tar.gz'
+    fixture(legacy_archive, legacy_desktop=True)
+    invoke(home, legacy_archive, 'second')
     assert os.readlink(base / 'current') == 'versions/second'
+    desktop = (home / f'.local/share/applications/{APP}.desktop').read_text()
+    assert shlex.split(next(line[5:] for line in desktop.splitlines() if line.startswith('Exec='))) == expected_exec, 'Upgrade must retain native Wayland even for an older archive'
     invoke(home, '--uninstall')
     assert not (base / 'current').is_symlink()
     assert (base / 'versions/first').is_dir() and (base / 'versions/second').is_dir()
@@ -81,4 +91,4 @@ with tempfile.TemporaryDirectory(prefix='omagrid-installer-test-') as temporary:
         invoke(home, bad, 'third', ok=False)
         assert not (base / 'versions/third').exists()
     assert not (root / 'escape').exists()
-print('PASS: dry run, install, upgrade, duplicate ID, uninstall, collision, traversal and symlink checks')
+print('PASS: dry run, native-Wayland launcher, legacy archive upgrade, duplicate ID, uninstall, collision, traversal and symlink checks')

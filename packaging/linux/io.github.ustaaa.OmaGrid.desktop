@@ -3,7 +3,7 @@ Type=Application
 Name=OmaGrid
 GenericName=Spreadsheet
 Comment=Calculate, analyse and chart data in workbooks
-Exec=omagrid %F
+Exec=env OMAGRID_WAYLAND=1 omagrid %F
 TryExec=omagrid
 Icon=io.github.ustaaa.OmaGrid
 Terminal=false
