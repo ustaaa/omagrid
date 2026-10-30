@@ -41,3 +41,10 @@ evidence does not cover this polish. Existing CI limitations remain open.
 Linux launch policy is documented consistently: the pilot launcher uses native Wayland;
 `OMAGRID_X11=1` forces X11, and `GRIDCRAFT_WAYLAND` remains a documented legacy alias.
 Source/diff whitespace checks pass. Native clipboard/drop/portal runtime gates remain open.
+
+### Candidate 2 review fixes (2026-10-31)
+Theme root selection now promotes a valid preferred root even after the selected legacy
+root disappears; invalid selected roots retain the last good palette and do not fall
+back to lower-priority roots. HOME/.local/state is checked alongside custom
+XDG_STATE_HOME with deduplication. X11 override accepts only `=1`. Focused Cargo tests
+were blocked before compile by an unwritable shared Cargo git database; rustfmt passed.

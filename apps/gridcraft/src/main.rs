@@ -233,6 +233,10 @@ fn icon() -> Option<egui::IconData> {
     Some(egui::IconData { width: img.width(), height: img.height(), rgba: img.into_raw() })
 }
 
+fn x11_override(value: Option<&std::ffi::OsStr>) -> bool {
+    value == Some(std::ffi::OsStr::new("1"))
+}
+
 fn main() -> eframe::Result<()> {
     // First, so the panic hook and every start-up warning are recorded (`logging`).
     let logger = logging::install();
@@ -339,10 +343,11 @@ fn main() -> eframe::Result<()> {
     // OMA*_X11=1 explicitly forces X11; unset OMA*_WAYLAND to let winit choose its default.
     // GRIDCRAFT_WAYLAND remains a documented legacy override for existing scripts.
     #[cfg(all(unix, not(target_os = "macos")))]
-    if std::env::var_os("OMAGRID_X11").is_some() || (std::env::var_os("DISPLAY").is_some_and(|d| !d.is_empty())
-        && std::env::var_os("OMAGRID_WAYLAND").is_none()
-        && std::env::var_os("GRIDCRAFT_WAYLAND").is_none()
-    ) {
+    if x11_override(std::env::var_os("OMAGRID_X11").as_deref())
+        || (std::env::var_os("DISPLAY").is_some_and(|d| !d.is_empty())
+            && std::env::var_os("OMAGRID_WAYLAND").is_none()
+            && std::env::var_os("GRIDCRAFT_WAYLAND").is_none())
+    {
         options.event_loop_builder = Some(Box::new(|b| {
             use winit::platform::x11::EventLoopBuilderExtX11;
             b.with_x11();
@@ -411,6 +416,17 @@ fn main() -> eframe::Result<()> {
         return run(options);
     }
     result
+}
+
+#[cfg(test)]
+mod x11_override_tests {
+    #[test]
+    fn only_one_enables_x11_override() {
+        assert!(super::x11_override(Some(std::ffi::OsStr::new("1"))));
+        assert!(!super::x11_override(Some(std::ffi::OsStr::new("0"))));
+        assert!(!super::x11_override(Some(std::ffi::OsStr::new(""))));
+        assert!(!super::x11_override(None));
+    }
 }
 
 #[cfg(test)]
