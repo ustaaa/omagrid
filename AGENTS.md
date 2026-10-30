@@ -1,9 +1,20 @@
+## OmaOffice lifecycle
+
+This repository is one component of https://github.com/ustaaa/omaoffice.
+The owner authorized establishing fork commits, private coordination repositories and
+reviewable GitHub branches for the current lifecycle task. This supersedes older
+Nomura-only coordination and private-host CHECKPOINT requirements for that task.
+Preserve unrelated changes. No automatic merge, public release or visibility change.
+Use independent model review plus reproducible tests; see the suite review contract.
+Do not write machine addresses, credentials or private notebook content into tracked
+files. The constrained runtime test machine is not a build host: x86 builds run on
+the designated Linux build host. Keep runtime and build evidence separate.
+
 # GridCraft — instructions for agents
 
 ## OmaGrid project override (user direction, 2026-10-29)
 
-This fork is OmaGrid. The primary development and runtime host is OmarchyMax,
-with this repository at `/home/irtek/Development/omagrid`, branch `codex/omarchy-ui`.
+This fork is OmaGrid. The current pilot branch is `codex/omarchy-ui`.
 The user explicitly removed the Nomura review/commit prerequisite for this project:
 Codex may review, commit, push this working branch, install and test the pilot.
 This supersedes the parent workspace's Nomura-only workflow for OmaGrid only.

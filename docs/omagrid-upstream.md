@@ -27,7 +27,7 @@ Appearance affects application chrome and interaction affordances only. Workbook
 1. Preserve baseline reports and original corpus hashes. Keep a clean upstream-only checkout and a separate downstream checkout.
 2. Resolve a candidate release to an exact commit; do not implicitly absorb moving main or change dependency pins independently.
 3. Inspect the upstream diff and dependency changes. Use the read-only merge preview in `tools/omarchy-validation` before an actual integration.
-4. Integrate on a separate branch, preserving the working branch and unrelated changes. The user authorized Codex to review, commit and push OmaGrid directly on 2026-10-29; no Nomura prerequisite applies to this project. OmarchyMax's `~/Development/omagrid` is the primary development checkout.
+4. Integrate on a separate branch, preserving the working branch and unrelated changes. The user authorized Codex to review, commit and push OmaGrid directly on 2026-10-29; no Nomura prerequisite applies to this project. Use a dedicated development checkout.
 5. Build upstream-only and downstream candidates using the same toolchain, dependency lock, fonts, profile and target machine. Run CI, behavioral/corpus comparison and desktop acceptance.
 6. Distinguish an upstream regression from a downstream regression. Do not publish a candidate with unresolved data-loss or core workflow failures.
 7. Record the accepted base SHA, changed pins, actual results and remaining limitations in the handoff. Retain the previous package for rollback.
@@ -44,9 +44,10 @@ Do not automatically update user installations or push a branch named `release`.
 
 MIME types describe formats; they are not renamed. Installing a development package must not change the user's default file handlers or overwrite GridCraft settings/binaries. Internal Cargo package names and compatible command schemas intentionally retain GridCraft naming.
 
-## Environment findings (2026-10-29)
+## Validation scope
 
-- UrazStudio: macOS arm64 authoring checkout at `/Users/irtek/Development/omagrid`.
-- OmarchyMax: Linux aarch64, Omarchy `4.0.0.r7218.gbe54892-1`, Hyprland 0.56.2, 5120x2160 at scale 2. Active palette `urazhalo-dusk-golden-gate`; fontconfig monospace resolves JetBrainsMono Nerd Font. Previously installed GridCraft is 0.10.0; leave it intact.
-- UrazHalo: Linux x86_64, Ubuntu 26.04.1, GNOME Shell 50.1 installed. A GNOME graphical user session was not active during planning; do not report it as runtime-tested without a real session.
-- Upstream's `plan/` instructions are untracked and not present in the public clone. The referenced `storytold/craftrules/AGENTS.md` returned 404 through both the connector and authenticated GitHub CLI. In-repo `AGENTS.md`, workspace guidance and explicit user instructions remain available.
+Linux ARM64 and x86_64 pilot builds have been exercised on native Wayland. Exact
+platform evidence and unresolved limits belong in HANDOFF.md and the OmaOffice
+validation ledger. Personal host inventory is maintained outside public source.
+Upstream untracked plan/ documents may be unavailable; use checked-in guidance and
+explicit task scope when they cannot be read.
