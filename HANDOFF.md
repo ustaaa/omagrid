@@ -36,3 +36,8 @@ PNG/SVG/ICO structure (where applicable), deterministic regeneration and whitesp
 checks passed. No engine, document, command, dependency or version changes.
 Installed-app validation of these new assets is still pending; previous runtime
 evidence does not cover this polish. Existing CI limitations remain open.
+
+### Suite review follow-up (2026-10-31)
+Linux launch policy is documented consistently: the pilot launcher uses native Wayland;
+`OMAGRID_X11=1` forces X11, and `GRIDCRAFT_WAYLAND` remains a documented legacy alias.
+Source/diff whitespace checks pass. Native clipboard/drop/portal runtime gates remain open.

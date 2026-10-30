@@ -335,13 +335,14 @@ fn main() -> eframe::Result<()> {
     let options = eframe::NativeOptions { viewport, ..Default::default() };
     #[cfg(all(unix, not(target_os = "macos")))]
     let mut options = options;
-    // Preserve the upstream backend default until native Wayland passes our runtime gate.
-    // OMAGRID_WAYLAND=1 (legacy GRIDCRAFT_WAYLAND=1) opts into native Wayland.
+    // Linux pilot policy: launchers opt into native Wayland for direct compositor scaling.
+    // OMA*_X11=1 explicitly forces X11; unset OMA*_WAYLAND to let winit choose its default.
+    // GRIDCRAFT_WAYLAND remains a documented legacy override for existing scripts.
     #[cfg(all(unix, not(target_os = "macos")))]
-    if std::env::var_os("DISPLAY").is_some_and(|d| !d.is_empty())
+    if std::env::var_os("OMAGRID_X11").is_some() || (std::env::var_os("DISPLAY").is_some_and(|d| !d.is_empty())
         && std::env::var_os("OMAGRID_WAYLAND").is_none()
         && std::env::var_os("GRIDCRAFT_WAYLAND").is_none()
-    {
+    ) {
         options.event_loop_builder = Some(Box::new(|b| {
             use winit::platform::x11::EventLoopBuilderExtX11;
             b.with_x11();

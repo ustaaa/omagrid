@@ -21,7 +21,7 @@ This is a development fork, based on GridCraft **v0.13.0** (`43284377d2466037628
 - A separate application identity, settings and control-token namespace.
 - Package-managed updates; the upstream self-updater cannot replace OmaGrid.
 
-The Linux desktop launcher and pilot installer set `OMAGRID_WAYLAND=1`, allowing native Wayland on Omarchy/Hyprland so the compositor's display scale reaches the application directly. This avoids the existing binary's forced X11 fallback when Hyprland also provides `DISPLAY`. Direct shell launches retain upstream behavior; use `OMAGRID_WAYLAND=1 omagrid` for the same backend selection as the launcher, or `env -u OMAGRID_WAYLAND -u GRIDCRAFT_WAYLAND omagrid` for the X11 fallback when `DISPLAY` is available. On an X11-only desktop, the launcher still lets winit select X11. Native portal, external clipboard, physical input and file-drop acceptance remain separate gates.
+The Linux pilot launchers set `OMAGRID_WAYLAND=1`, allowing native Wayland on Omarchy/Hyprland so the compositor's display scale reaches the application directly. Use `OMAGRID_X11=1 omagrid` to force X11 (with an X server available), or unset `OMAGRID_WAYLAND` and legacy `GRIDCRAFT_WAYLAND` to let winit choose. `GRIDCRAFT_WAYLAND` remains accepted for existing scripts. Native portal, external clipboard, physical input and file-drop acceptance remain separate runtime gates.
 
 ## Develop
 
