@@ -47,7 +47,7 @@ MIME types describe formats; they are not renamed. Installing a development pack
 ## Validation scope
 
 Linux ARM64 and x86_64 pilot builds have been exercised on native Wayland. Exact
-platform evidence and unresolved limits belong in HANDOFF.md and the OmaOffice
+platform evidence and unresolved limits belong in HANDOFF.md and the OmaCraft
 validation ledger. Personal host inventory is maintained outside public source.
 Upstream untracked plan/ documents may be unavailable; use checked-in guidance and
 explicit task scope when they cannot be read.

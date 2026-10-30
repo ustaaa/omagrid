@@ -1,5 +1,8 @@
 # OmaGrid
 
+Part of [OmaCraft](https://github.com/ustaaa/omacraft) - a friendly fork of ArtCraft's GridCraft.
+
+
 OmaGrid is a Linux desktop adaptation of [GridCraft](https://github.com/storytold/gridcraft), with an Omarchy-aware interface and the existing Excel-style ribbon and spreadsheet engine.
 
 This is a development fork, based on GridCraft **v0.13.0** (`43284377d2466037628e57d8ad0c891778fdb45c`). It is not an ArtCraft product or an official Omarchy application. GridCraft remains alpha; neither complete Excel behavioral parity nor lossless support for arbitrary Excel files is claimed.
