@@ -69,18 +69,62 @@ require(finish_args(manifests[0]) == finish_args(manifests[1]), "Flatpak source/
 for key in ("runtime", "runtime-version", "sdk"):
     require(field(manifests[0], key) == field(manifests[1], key), f"Flatpak {key} differs")
 
+def validate_workflows(workflow_dir):
+    expected = {"ci.yml", "macos-check.yml"}
+    actual = {path.name for path in workflow_dir.glob("*.y*ml")}
+    problems = [f"Unexpected active workflow: {name}" for name in sorted(actual - expected)]
+    for name in sorted(expected - actual):
+        problems.append(f"Missing required workflow: {name}")
+    if actual != expected:
+        return problems
+
+    texts = {name: (workflow_dir / name).read_text() for name in expected}
+    for name, text in texts.items():
+        for action in re.findall(r"uses: ([^\s#]+)", text):
+            if not re.fullmatch(r"[^@]+@[0-9a-f]{40}", action):
+                problems.append(f"Unpinned action in {name}: {action}")
+
+    def contents_read_only(text):
+        match = re.search(r"(?ms)^permissions:\s*\n(.*?)(?=^jobs:)", text)
+        if not match:
+            return False
+        permissions = [line.strip() for line in match.group(1).splitlines() if line.strip()]
+        return permissions == ["contents: read"]
+
+    ci = re.sub(r"(?m)#.*$", "", texts["ci.yml"])
+    triggers = re.search(r"(?ms)^on:\s*\n(.*?)(?=^permissions:)", ci)
+    if not triggers:
+        problems.append("ci.yml must declare explicit workflow triggers")
+    else:
+        names = set(re.findall(r"^  ([A-Za-z_]+):", triggers.group(1), re.M))
+        if names != {"push", "pull_request", "workflow_dispatch"}:
+            problems.append("ci.yml triggers must be push, pull_request and workflow_dispatch only")
+        if not re.search(r"(?m)^    branches:\s*\[\s*main\s*,\s*pilot\s*\]\s*$", triggers.group(1)):
+            problems.append("ci.yml push branches must be exactly main and pilot")
+    if not contents_read_only(ci):
+        problems.append("ci.yml must use read-only contents permission")
+    if re.search(r"(?im)^  [A-Za-z0-9_-]*(?:release|publish|upload|sign)[A-Za-z0-9_-]*:", ci):
+        problems.append("ci.yml must not define release, upload, signing or publishing jobs")
+    if re.search(r"(?i)(actions/upload-artifact|gh release|cargo publish|codesign|notarytool|create-dmg)", ci):
+        problems.append("ci.yml must not upload, sign or publish release artifacts")
+
+    mac = re.sub(r"(?m)#.*$", "", texts["macos-check.yml"])
+    mac = re.sub(r"--release\b", "", mac)  # Cargo optimization profile, not a product release route.
+    mac_triggers = re.search(r"(?ms)^on:\s*\n(.*?)(?=^permissions:)", mac)
+    if not mac_triggers or set(re.findall(r"^  ([A-Za-z_]+):", mac_triggers.group(1), re.M)) != {"workflow_dispatch"}:
+        problems.append("macos-check.yml must be manual-only (workflow_dispatch)")
+    if not contents_read_only(mac):
+        problems.append("macos-check.yml must use read-only contents permission")
+    if re.search(r"(?i)release|upload|sign|publish|notary|codesign|create-dmg", mac):
+        problems.append("macos-check.yml must only compile; release/upload/sign/publish routes are forbidden")
+    return problems
+
 main = read("apps/gridcraft/src/main.rs")
 updates = read("crates/ui-egui/src/updates_ui.rs")
 require("self_update::finish" not in main and ".start_update_check(" not in main, "Desktop updater route re-enabled")
 require("craft_update" not in updates and "Updater" not in updates, "Development UI must not instantiate an updater")
 require(' -u ' not in read("packaging/linux/package.sh"), "Development AppImage must not embed an update endpoint")
-for workflow in (ROOT / ".github/workflows").glob("*.y*ml"):
-    text = workflow.read_text()
-    require(workflow.name == "ci.yml", f"Unexpected active workflow: {workflow.name}")
-    require("  workflow_dispatch:" in text and "  pull_request:" in text, "Keep manual and pull-request quality checks")
-    require(not re.search(r"^  (schedule|release|workflow_run):", text, re.M), "Unexpected scheduled or release trigger found")
-    for action in re.findall(r"uses: ([^\s#]+)", text):
-        require(bool(re.fullmatch(r"[^@]+@[0-9a-f]{40}", action)), f"Unpinned action: {action}")
+errors.extend(validate_workflows(ROOT / ".github/workflows"))
 require(read("NOTICE").strip() != "", "Preserve upstream NOTICE")
 if errors:
     raise SystemExit("OmaGrid identity check failed:\n- " + "\n- ".join(errors))
