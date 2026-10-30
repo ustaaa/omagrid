@@ -48,3 +48,11 @@ root disappears; invalid selected roots retain the last good palette and do not 
 back to lower-priority roots. HOME/.local/state is checked alongside custom
 XDG_STATE_HOME with deduplication. X11 override accepts only `=1`. Focused Cargo tests
 were blocked before compile by an unwritable shared Cargo git database; rustfmt passed.
+
+### Upstream variable isolation by Claude (2026-10-31; branch claude/identity-env)
+The control port, control token and no-preferences switch now read only
+`OMAGRID_CONTROL_PORT`, `OMAGRID_CONTROL_TOKEN` and `OMAGRID_NO_PREFS`. The upstream
+`GRIDCRAFT_` fallbacks are gone, so values exported for an upstream GridCraft install
+cannot bind the same port, send its credential or switch off OmaGrid preferences.
+`GRIDCRAFT_WAYLAND` stays as the documented backend alias. Unit tests prove upstream
+names are ignored. Docs that describe driving OmaGrid now name the OmaGrid variables.

@@ -90,10 +90,20 @@ fn config_dir() -> Option<std::path::PathBuf> {
     }
 }
 
-/// Runs without preferences (`GRIDCRAFT_NO_PREFS`, agents' test runs) neither read nor write
+/// Runs without preferences (`OMAGRID_NO_PREFS`, agents' test runs) neither read nor write
 /// them, and keep no log file.
 fn prefs_enabled() -> bool {
-    std::env::var_os("OMAGRID_NO_PREFS").is_none() && std::env::var_os("GRIDCRAFT_NO_PREFS").is_none()
+    prefs_enabled_from(|name| std::env::var_os(name))
+}
+
+/// Only OmaGrid's own names are read for preferences and the control port. A `GRIDCRAFT_`
+/// value exported for an upstream GridCraft install must not change what OmaGrid does.
+fn prefs_enabled_from(var: impl Fn(&str) -> Option<std::ffi::OsString>) -> bool {
+    var("OMAGRID_NO_PREFS").is_none()
+}
+
+fn control_port_from(var: impl Fn(&str) -> Option<String>) -> Option<u16> {
+    var("OMAGRID_CONTROL_PORT").and_then(|p| p.parse().ok())
 }
 
 /// Where the log files live: `logs` in the settings folder, next to `ui.json` (see `logging`).
@@ -265,8 +275,7 @@ fn main() -> eframe::Result<()> {
         println!("OmaGrid {}", env!("CARGO_PKG_VERSION"));
         return Ok(());
     }
-    let mut control_port: Option<u16> =
-        std::env::var("OMAGRID_CONTROL_PORT").or_else(|_| std::env::var("GRIDCRAFT_CONTROL_PORT")).ok().and_then(|p| p.parse().ok());
+    let mut control_port: Option<u16> = control_port_from(|name| std::env::var(name).ok());
     let mut control_token: Option<String> = gridcraft_mcp::control_auth::configured_token();
     let mut sample: Option<String> = None;
     let mut files: Vec<String> = Vec::new();
@@ -421,6 +430,16 @@ fn main() -> eframe::Result<()> {
 
 #[cfg(test)]
 mod x11_override_tests {
+    #[test]
+    fn upstream_names_do_not_reach_preferences_or_the_control_port() {
+        let upstream = |name: &str| name.starts_with("GRIDCRAFT_").then(|| "7979".to_string());
+        assert_eq!(super::control_port_from(upstream), None);
+        assert!(super::prefs_enabled_from(|name| upstream(name).map(Into::into)));
+        let ours = |name: &str| name.starts_with("OMAGRID_").then(|| "7980".to_string());
+        assert_eq!(super::control_port_from(ours), Some(7980));
+        assert!(!super::prefs_enabled_from(|name| ours(name).map(Into::into)));
+    }
+
     #[test]
     fn only_one_enables_x11_override() {
         assert!(super::x11_override(Some(std::ffi::OsStr::new("1"))));

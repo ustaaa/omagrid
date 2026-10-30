@@ -3,7 +3,7 @@
 Start the desktop app with a control port:
 
 ```sh
-gridcraft --control 7979            # or GRIDCRAFT_CONTROL_PORT=7979
+omagrid --control 7979            # or OMAGRID_CONTROL_PORT=7979
 ```
 
 ## Authentication
@@ -16,7 +16,7 @@ The control port is reachable by every program on the machine, and by a web page
   writes it to a file only you can read: `$XDG_RUNTIME_DIR/gridcraft/control-<port>.token` (else
   `~/.cache/gridcraft/…`; Windows: `%USERPROFILE%\.gridcraft\…`; the folder is mode 0700 and the
   file 0600 on Unix). The path is printed on stderr. The token itself is never printed or logged.
-- Or choose the token yourself: `GRIDCRAFT_CONTROL_TOKEN=…` (preferred) or `--control-token …`
+- Or choose the token yourself: `OMAGRID_CONTROL_TOKEN=…` (preferred) or `--control-token …`
   (visible in the process list), at least 16 characters. The app then writes no file.
 - The first line of a connection must be
   `{"id":0,"method":"auth","params":{"token":"…"}}`; the reply is
@@ -25,7 +25,7 @@ The control port is reachable by every program on the machine, and by a web page
   one longer than 4 KiB) gets `{"ok":false,"error":"authentication required"}` and the
   connection is closed. After that, a line that isn't JSON also closes the connection.
 - `gridcraft-cli send`/`mcp --connect` and `gridcraft_mcp::Remote` do this themselves: they use
-  `GRIDCRAFT_CONTROL_TOKEN` if set, else the token file of that port (so they work for the same
+  `OMAGRID_CONTROL_TOKEN` if set, else the token file of that port (so they work for the same
   user on the same machine without setup). Your own client reads the file or the variable.
 
 ## Requests

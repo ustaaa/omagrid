@@ -4,7 +4,7 @@
 //! reach a loopback port. So the first line of every connection must be
 //! `{"id":…,"method":"auth","params":{"token":"…"}}`, with the secret the app made at start. The
 //! app keeps it in memory and writes it to a file only the user can read (or the user chooses it
-//! with `OMAGRID_CONTROL_TOKEN` (legacy `GRIDCRAFT_CONTROL_TOKEN` is also accepted)); [`Remote`](crate::Remote) reads it from the same places.
+//! with `OMAGRID_CONTROL_TOKEN`); [`Remote`](crate::Remote) reads it from the same places. The upstream GridCraft token variable is not read, so a credential exported for GridCraft is never sent to OmaGrid.
 
 use std::path::PathBuf;
 
@@ -87,12 +87,14 @@ fn port_of(addr: &str) -> Option<u16> {
     addr.rsplit(':').next()?.parse().ok()
 }
 
-/// Explicit token overrides. The legacy variable is accepted for protocol clients, but the
-/// automatically discovered token file is always in OmaGrid's private namespace.
+/// The token chosen with [`TOKEN_ENV`]. The automatically discovered token file is always in
+/// OmaGrid's private namespace too.
 pub fn configured_token() -> Option<String> {
-    [TOKEN_ENV, "GRIDCRAFT_CONTROL_TOKEN"]
-        .into_iter()
-        .find_map(|name| std::env::var(name).ok().map(|s| s.trim().to_owned()).filter(|s| !s.is_empty()))
+    configured_token_from(|name| std::env::var(name).ok())
+}
+
+fn configured_token_from(var: impl Fn(&str) -> Option<String>) -> Option<String> {
+    var(TOKEN_ENV).map(|s| s.trim().to_owned()).filter(|s| !s.is_empty())
 }
 
 /// The token a client uses for `addr`: [`TOKEN_ENV`] if set, else the file the app wrote.
@@ -149,5 +151,13 @@ mod isolation_tests {
         assert_eq!(directory, Some(if cfg!(windows) { ".omagrid" } else { "omagrid" }));
         assert_eq!(path.file_name().and_then(|s| s.to_str()), Some("control-7979.token"));
         assert_eq!(super::TOKEN_ENV, "OMAGRID_CONTROL_TOKEN");
+    }
+
+    #[test]
+    fn an_upstream_token_is_never_used() {
+        let upstream = |name: &str| (name == "GRIDCRAFT_CONTROL_TOKEN").then(|| "upstream-secret".to_string());
+        assert_eq!(super::configured_token_from(upstream), None);
+        let ours = |name: &str| (name == "OMAGRID_CONTROL_TOKEN").then(|| " ours ".to_string());
+        assert_eq!(super::configured_token_from(ours).as_deref(), Some("ours"));
     }
 }
