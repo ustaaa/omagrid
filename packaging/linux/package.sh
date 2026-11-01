@@ -17,7 +17,7 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
 HERE="$ROOT/packaging/linux"
 APP_ID=io.github.ustaaa.OmaGrid
-UPSTREAM_VERSION="$VERSION"
+UPSTREAM_VERSION="$(workspace_version)"
 VERSION="$(tr -d '\r\n' < "$ROOT/oma-version.txt")"
 [[ -n "$VERSION" ]] || { echo "error: empty OmaGrid version label" >&2; exit 1; }
 
