@@ -66,7 +66,11 @@ fn main() -> ExitCode {
     let rest = args.get(1..).unwrap_or_default();
     let r = match args.first().map(String::as_str) {
         Some("--version" | "-V" | "version") => {
-            outln!("omagrid-cli {} (upstream GridCraft {})", include_str!("../../../oma-version.txt").trim_ascii(), env!("CARGO_PKG_VERSION"));
+            outln!(
+                "omagrid-cli {} (upstream GridCraft {})",
+                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../OMA_VERSION")).trim_ascii(),
+                env!("CARGO_PKG_VERSION")
+            );
             Ok(())
         }
         Some("--help" | "-h" | "help") => {

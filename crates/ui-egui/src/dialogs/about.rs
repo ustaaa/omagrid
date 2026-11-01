@@ -18,7 +18,7 @@ pub(super) fn about(ui: &mut egui::Ui, d: &mut Dialog) {
             ui.heading("OmaGrid");
             ui.label(format!(
                 "Version {} • based on GridCraft v{} (43284377)",
-                include_str!("../../../oma-version.txt").trim_ascii(),
+                include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../OMA_VERSION")).trim_ascii(),
                 env!("CARGO_PKG_VERSION")
             ));
             ui.add_space(4.0);

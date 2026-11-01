@@ -24,7 +24,11 @@ fn tmpdir(name: &str) -> PathBuf {
 
 #[test]
 fn version_and_usage() {
-    let expected = format!("omagrid-cli {} (upstream GridCraft {})", include_str!("../../../../oma-version.txt").trim(), env!("CARGO_PKG_VERSION"));
+    let expected = format!(
+        "omagrid-cli {} (upstream GridCraft {})",
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../OMA_VERSION")).trim_ascii(),
+        env!("CARGO_PKG_VERSION")
+    );
     assert_eq!(ok(&["--version"]).trim(), expected);
     assert_eq!(ok(&["version"]).trim(), expected);
     let o = run(&["frobnicate"]);
