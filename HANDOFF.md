@@ -91,3 +91,6 @@ the component gates. Cargo offline lock regeneration was unavailable because the
 crates.io index lacks `sha1`; the upstream lock was retained with the unused updater
 package references removed. Local merge commit `23ee2555349695d71d3e94ee8e277fd2343a934d`
 is ready for root review; it has not been pushed.
+
+## 2026-11-01 Claude upstream review corrections
+Cargo lock regenerated to match manifests: remove updater-only graph, restore pinned craft-platform; preserve all Windows dependency edges from both parents. Original --locked metadata fails101; corrected full --locked metadata passes0 on Linux cargo1.98.0. Restored Flatpak bundle no-debuginfo; renamed UI VBA notice to OmaGrid while retaining upstream engine/format wording. Archived unsupported FreeBSD packager behind explanatory exit2 entrypoint. Full four-thread cargo xtask ci passes all10 steps on corrected source; exact clean commit rerun pending. Claude independently reviewed conflict resolutions/lock and accepted scope: source/test Linux candidate, no runtime/public approval. No deployment.

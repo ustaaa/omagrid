@@ -39,6 +39,9 @@ finish-args:
   # Deliberately not granted: network (the optional --control channel listens on 127.0.0.1 in
   # the sandbox; `flatpak override --user --share=network io.github.ustaaa.OmaGrid` exposes it to
   # host agents) and home/host filesystem access.
+# Skip the debuginfo pass: release runners may not provide eu-strip for CUPS tools.
+build-options:
+  no-debuginfo: true
 modules:
   # CUPS client tools for craft-print: the runtime has libcups but not lpstat/lp/lpoptions.
   # Linked statically against this release's libcups, so a runtime update can't break them;
