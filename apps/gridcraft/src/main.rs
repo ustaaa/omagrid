@@ -272,7 +272,7 @@ fn main() -> eframe::Result<()> {
     let args: Vec<String> = std::env::args().skip(1).collect();
     // OmaGrid never executes the upstream binary replacement helper.
     if args.iter().any(|a| a == "--version" || a == "-V") {
-        println!("OmaGrid {}", env!("CARGO_PKG_VERSION"));
+        println!("OmaGrid {} (upstream GridCraft {})", include_str!("../../../oma-version.txt").trim(), env!("CARGO_PKG_VERSION"));
         return Ok(());
     }
     let mut control_port: Option<u16> = control_port_from(|name| std::env::var(name).ok());
@@ -306,7 +306,12 @@ fn main() -> eframe::Result<()> {
     if let Some(logger) = logger {
         match log_dir().filter(|_| prefs_enabled()) {
             Some(dir) => match logger.attach_dir(&dir) {
-                Ok(path) => log::info!("OmaGrid {}, log file {}", env!("CARGO_PKG_VERSION"), path.display()),
+                Ok(path) => log::info!(
+                    "OmaGrid {} (upstream GridCraft {}), log file {}",
+                    include_str!("../../../oma-version.txt").trim(),
+                    env!("CARGO_PKG_VERSION"),
+                    path.display()
+                ),
                 // Standard error only by now (`attach_dir` gave up on the file); unlike `eprintln!`, never panics.
                 Err(e) => log::warn!("no log file: {e}"),
             },

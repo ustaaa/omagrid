@@ -56,3 +56,11 @@ The control port, control token and no-preferences switch now read only
 cannot bind the same port, send its credential or switch off OmaGrid preferences.
 `GRIDCRAFT_WAYLAND` stays as the documented backend alias. Unit tests prove upstream
 names are ignored. Docs that describe driving OmaGrid now name the OmaGrid variables.
+
+### Alpha version reporting (2026-11-01)
+Downstream label `0.13.0-oma.1.alpha.1` is shown by GUI About/account and
+`omagrid --version` / `omagrid-cli --version`; output names upstream GridCraft 0.13.0
+separately. Linux packages use the downstream label and include `VERSION.txt` with both
+versions. Cargo package versions and lockfile are unchanged. Rust builds/runtime and
+package artifact verification are delegated to Halo; local formatting, shell syntax and
+diff whitespace checks passed.

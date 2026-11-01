@@ -17,6 +17,9 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
 HERE="$ROOT/packaging/linux"
 APP_ID=io.github.ustaaa.OmaGrid
+UPSTREAM_VERSION="$VERSION"
+VERSION="$(tr -d '\r\n' < "$ROOT/oma-version.txt")"
+[[ -n "$VERSION" ]] || { echo "error: empty OmaGrid version label" >&2; exit 1; }
 
 SKIP_BUILD=0
 FORMATS="appimage deb rpm tar"
@@ -68,6 +71,7 @@ done
 install -Dm644 "$ROOT/assets/omagrid-icon/$APP_ID.svg" "$STAGE/usr/share/icons/hicolor/scalable/apps/$APP_ID.svg"
 mkdir -p "$STAGE/usr/share/doc/omagrid"
 copy_docs "$STAGE/usr/share/doc/omagrid"
+printf 'OmaGrid %s\nUpstream GridCraft %s\n' "$VERSION" "$UPSTREAM_VERSION" >"$STAGE/usr/share/doc/omagrid/VERSION.txt"
 
 if command -v desktop-file-validate >/dev/null; then
   desktop-file-validate "$STAGE/usr/share/applications/$APP_ID.desktop"

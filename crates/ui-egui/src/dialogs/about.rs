@@ -16,7 +16,11 @@ pub(super) fn about(ui: &mut egui::Ui, d: &mut Dialog) {
         "Models" => crate::credits::models_ui(ui),
         _ => {
             ui.heading("OmaGrid");
-            ui.label("OmaGrid development • based on GridCraft v0.13.0 (43284377)");
+            ui.label(format!(
+                "Version {} • based on GridCraft v{} (43284377)",
+                include_str!("../../../oma-version.txt").trim(),
+                env!("CARGO_PKG_VERSION")
+            ));
             ui.add_space(4.0);
             ui.label("A native spreadsheet for Omarchy and Linux. An independent fork of GridCraft.");
             ui.hyperlink_to("OmaGrid source", "https://github.com/ustaaa/omagrid");
