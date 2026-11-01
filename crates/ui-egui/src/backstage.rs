@@ -798,7 +798,7 @@ fn account(app: &mut SheetApp, ui: &mut Ui) {
     ui.add_space(8.0);
     egui::Grid::new("backstage_account").num_columns(2).spacing(vec2(18.0, 8.0)).show(ui, |ui| {
         for (label, value) in [
-            ("Version", format!("{} (upstream GridCraft {})", include_str!("../../../oma-version.txt").trim(), env!("CARGO_PKG_VERSION"))),
+            ("Version", format!("{} (upstream GridCraft {})", include_str!("../../../oma-version.txt").trim_ascii(), env!("CARGO_PKG_VERSION"))),
             ("Platform", platform()),
             ("Licence", env!("CARGO_PKG_LICENSE").to_string()),
         ] {

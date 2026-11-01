@@ -272,7 +272,7 @@ fn main() -> eframe::Result<()> {
     let args: Vec<String> = std::env::args().skip(1).collect();
     // OmaGrid never executes the upstream binary replacement helper.
     if args.iter().any(|a| a == "--version" || a == "-V") {
-        println!("OmaGrid {} (upstream GridCraft {})", include_str!("../../../oma-version.txt").trim(), env!("CARGO_PKG_VERSION"));
+        println!("OmaGrid {} (upstream GridCraft {})", include_str!("../../../oma-version.txt").trim_ascii(), env!("CARGO_PKG_VERSION"));
         return Ok(());
     }
     let mut control_port: Option<u16> = control_port_from(|name| std::env::var(name).ok());
@@ -308,7 +308,7 @@ fn main() -> eframe::Result<()> {
             Some(dir) => match logger.attach_dir(&dir) {
                 Ok(path) => log::info!(
                     "OmaGrid {} (upstream GridCraft {}), log file {}",
-                    include_str!("../../../oma-version.txt").trim(),
+                    include_str!("../../../oma-version.txt").trim_ascii(),
                     env!("CARGO_PKG_VERSION"),
                     path.display()
                 ),
