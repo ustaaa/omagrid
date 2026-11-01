@@ -218,6 +218,12 @@ impl Language {
         translated.unwrap_or_else(|| text.rsplit_once('|').map_or(text, |(_, label)| label))
     }
 
+    /// Translate the upstream product label, then substitute the fork's display name.
+    /// Catalog keys stay intact; document text never passes through this adapter.
+    pub fn product_label(self, text: &str) -> String {
+        self.tr(text).replace("GridCraft", "OmaGrid")
+    }
+
     pub(crate) fn tr_error(self, message: &str) -> String {
         let message = if message.starts_with("command `") { crate::clean_error(message) } else { message.to_owned() };
 

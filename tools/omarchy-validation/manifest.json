@@ -1,0 +1,57 @@
+{
+  "schema": "omagrid-synthetic-corpus/1",
+  "upstream": "https://github.com/storytold/gridcraft",
+  "baseRef": "v0.13.0",
+  "baseSha": "43284377d2466037628e57d8ad0c891778fdb45c",
+  "fixtures": [
+    {
+      "name": "arithmetic-history",
+      "formulaCells": 2,
+      "create": [
+        {"command": "range.setValues", "params": {"range": "A1", "values": [[2, 3], [4, 5]]}},
+        {"command": "cell.set", "params": {"cell": "C1", "input": "=SUM(A1:B2)"}},
+        {"command": "cell.set", "params": {"cell": "C2", "input": "=C1*2"}}
+      ],
+      "edit": [
+        {"command": "cell.set", "params": {"cell": "A1", "input": "10"}},
+        {"command": "edit.undo", "params": {}},
+        {"command": "edit.redo", "params": {}}
+      ],
+      "reads": [{"params": {"range": "A1:C2"}, "values": [[10, 3, 22], [4, 5, 44]]}],
+      "inspectCells": ["A1", "C1", "C2"]
+    },
+    {
+      "name": "cross-sheet",
+      "formulaCells": 1,
+      "create": [
+        {"command": "sheet.rename", "params": {"name": "Inputs"}},
+        {"command": "range.setValues", "params": {"range": "A1", "values": [[7], [11]]}},
+        {"command": "home.insertSheet", "params": {"name": "Summary"}},
+        {"command": "cell.set", "params": {"cell": "A1", "input": "=SUM(Inputs!A1:A2)"}}
+      ],
+      "edit": [{"command": "cell.set", "params": {"sheet": "Inputs", "cell": "A2", "input": "13"}}],
+      "reads": [
+        {"params": {"sheet": "Inputs", "range": "A1:A2"}, "values": [[7], [13]]},
+        {"params": {"sheet": "Summary", "range": "A1"}, "values": [[20]]}
+      ],
+      "inspectCells": ["A1"]
+    },
+    {
+      "name": "text-format-view",
+      "formulaCells": 1,
+      "create": [
+        {"command": "range.setValues", "params": {"range": "A1", "values": [["İstanbul", "00123"], ["literal", "1,25"]], "parse": false}},
+        {"command": "cell.set", "params": {"cell": "A2", "input": "'=literal"}},
+        {"command": "cell.set", "params": {"cell": "C1", "input": "12.5"}},
+        {"command": "cell.set", "params": {"cell": "C2", "input": "=C1/2"}},
+        {"command": "home.bold", "params": {"range": "A1:C1", "on": true}},
+        {"command": "home.numberFormat", "params": {"range": "C1:C2", "code": "0.00"}},
+        {"command": "home.mergeCells", "params": {"range": "A4:B4"}},
+        {"command": "view.freezePanes", "params": {"cell": "B2"}}
+      ],
+      "edit": [{"command": "cell.set", "params": {"cell": "C1", "input": "15"}}],
+      "reads": [{"params": {"range": "A1:C2"}, "values": [["İstanbul", "00123", 15], ["=literal", "1,25", 7.5]]}],
+      "inspectCells": ["A1", "B1", "A2", "C1", "C2"]
+    }
+  ]
+}

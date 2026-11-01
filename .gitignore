@@ -8,3 +8,7 @@ plan/
 /.claude/
 /target-*/
 /craft-fonts/
+
+# Local validation tooling caches
+__pycache__/
+*.py[cod]

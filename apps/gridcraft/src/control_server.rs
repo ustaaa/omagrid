@@ -23,21 +23,21 @@ const MAX_LINE: usize = 64 * 1024 * 1024;
 /// How long a new connection may take to send its token.
 const AUTH_TIMEOUT: Duration = Duration::from_secs(10);
 
-/// The secret of this run: the one the user chose (`--control-token`, `GRIDCRAFT_CONTROL_TOKEN`),
+/// The secret of this run: the one the user chose (`--control-token`, `OMAGRID_CONTROL_TOKEN`),
 /// else 256 random bits from the operating system, written to a file only the user can read.
 fn make_token(port: u16, chosen: Option<String>) -> std::io::Result<String> {
     if let Some(t) = chosen.map(|t| t.trim().to_string()).filter(|t| !t.is_empty()) {
         if t.len() < control_auth::MIN_TOKEN_LEN {
             return Err(std::io::Error::other(format!("the control token must have at least {} characters", control_auth::MIN_TOKEN_LEN)));
         }
-        eprintln!("gridcraft: control channel on 127.0.0.1:{port} requires the token you set (clients: GRIDCRAFT_CONTROL_TOKEN)");
+        eprintln!("omagrid: control channel on 127.0.0.1:{port} requires the token you set (clients: OMAGRID_CONTROL_TOKEN)");
         return Ok(t);
     }
     let mut bytes = [0u8; 32];
     getrandom::fill(&mut bytes).map_err(|e| std::io::Error::other(format!("no random numbers for the control token: {e}")))?;
     let token = control_auth::hex(&bytes);
     let path = control_auth::write_token_file(port, &token)?;
-    eprintln!("gridcraft: control channel on 127.0.0.1:{port}; its token is in {} (gridcraft-cli reads it)", path.display());
+    eprintln!("omagrid: control channel on 127.0.0.1:{port}; its token is in {} (omagrid-cli reads it)", path.display());
     Ok(token)
 }
 

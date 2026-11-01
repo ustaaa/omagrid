@@ -1,24 +1,25 @@
 #!/usr/bin/env bash
-# Build and package GridCraft for Linux (<arch> is x86_64 or aarch64, or riscv64 when cross-compiling):
+# Build and package OmaGrid for Linux (<arch> is x86_64 or aarch64, or riscv64 when cross-compiling):
 #
-#   $DIST/gridcraft-<version>-linux-<arch>.AppImage  any distro with glibc >= the build host's
-#   $DIST/gridcraft-<version>-linux-<arch>.AppImage.zsync  delta updates (needs zsyncmake)
-#   $DIST/gridcraft-<version>-linux-<arch>.deb       Debian, Ubuntu, Mint, Pop!_OS, ...
-#   $DIST/gridcraft-<version>-linux-<arch>.rpm       Fedora, openSUSE, RHEL, ...
-#   $DIST/gridcraft-<version>-linux-<arch>.tar.gz    plain FHS-style tree (bin/, share/)
+#   $DIST/omagrid-<version>-linux-<arch>.AppImage  any distro with glibc >= the build host's
+#   $DIST/omagrid-<version>-linux-<arch>.deb       Debian, Ubuntu, Mint, Pop!_OS, ...
+#   $DIST/omagrid-<version>-linux-<arch>.rpm       Fedora, openSUSE, RHEL, ...
+#   $DIST/omagrid-<version>-linux-<arch>.tar.gz    plain FHS-style tree (bin/, share/)
 #
 # Usage: packaging/linux/package.sh [--skip-build] [--formats "appimage deb rpm tar"]
 #
 # Needs: cargo; nfpm for deb/rpm (https://nfpm.goreleaser.com); appimagetool and the AppImage
 # runtime for the AppImage (pinned downloads into $CARGO_TARGET_DIR, or APPIMAGETOOL and
-# APPIMAGE_RUNTIME, e.g. on riscv64, which has no pinned ones). Build on an old distro (CI: Ubuntu 22.04,
-# glibc 2.35) so the binaries run on newer ones. Optional: desktop-file-validate, appstreamcli,
-# zsyncmake (the zsync package) for the AppImage's .zsync.
+# APPIMAGE_RUNTIME, e.g. on riscv64, which has no pinned ones). Build on an old distro (CI: Ubuntu 24.04,
+# glibc 2.39) so the binaries run on newer ones. Optional: desktop-file-validate, appstreamcli.
 set -euo pipefail
 # shellcheck source=../env.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
 HERE="$ROOT/packaging/linux"
-APP_ID=ai.storyteller.gridcraft
+APP_ID=io.github.ustaaa.OmaGrid
+UPSTREAM_VERSION="$(workspace_version)"
+VERSION="$(tr -d '\r\n' < "$ROOT/OMA_VERSION")"
+[[ -n "$VERSION" ]] || { echo "error: empty OmaGrid version label" >&2; exit 1; }
 
 SKIP_BUILD=0
 FORMATS="appimage deb rpm tar"
@@ -38,10 +39,10 @@ case "$ARCH" in
   aarch64 | arm64) ARCH=aarch64; DEB_ARCH=arm64 ;;
   *) echo "unsupported architecture $ARCH" >&2; exit 2 ;;
 esac
-export GRIDCRAFT_MAINTAINER="${GRIDCRAFT_MAINTAINER:-GridCraft maintainers <gridcraft@storyteller.ai>}"
-BASENAME="gridcraft-$VERSION-linux-$ARCH"
+export OMAGRID_MAINTAINER="${OMAGRID_MAINTAINER:-OmaGrid contributors}"
+BASENAME="omagrid-$VERSION-linux-$ARCH"
 
-echo "==> GridCraft $VERSION for Linux $ARCH ($FORMATS)"
+echo "==> OmaGrid $VERSION for Linux $ARCH ($FORMATS)"
 
 if [[ "$SKIP_BUILD" = 0 ]]; then
   if [[ -n "${CROSS_TARGET:-}" ]]; then
@@ -56,18 +57,21 @@ STAGE="$WORK/root"
 rm -rf "$WORK"
 
 # ---- stage an FHS tree (shared by every format) -------------------------------------------------
-install -Dm755 "$BIN/gridcraft" "$STAGE/usr/bin/gridcraft"
-install -Dm755 "$BIN/gridcraft-cli" "$STAGE/usr/bin/gridcraft-cli"
-"${CROSS_COMPILE:-}strip" "$STAGE/usr/bin/gridcraft" "$STAGE/usr/bin/gridcraft-cli" 2>/dev/null || true
+install -Dm755 "$BIN/omagrid" "$STAGE/usr/bin/omagrid"
+install -Dm755 "$BIN/omagrid-cli" "$STAGE/usr/bin/omagrid-cli"
+"${CROSS_COMPILE:-}strip" "$STAGE/usr/bin/omagrid" "$STAGE/usr/bin/omagrid-cli" 2>/dev/null || true
 install -Dm644 "$HERE/$APP_ID.desktop" "$STAGE/usr/share/applications/$APP_ID.desktop"
 install -Dm644 "$HERE/$APP_ID.mime.xml" "$STAGE/usr/share/mime/packages/$APP_ID.xml"
 mkdir -p "$STAGE/usr/share/metainfo"
 sed -e "s/@VERSION@/$VERSION/g" -e "s/@DATE@/$GRIDCRAFT_BUILD_DATE/g" \
   "$HERE/$APP_ID.metainfo.xml.in" >"$STAGE/usr/share/metainfo/$APP_ID.metainfo.xml"
-mkdir -p "$STAGE/usr/share/icons"
-cp -R "$ROOT/assets/app-icon/hicolor" "$STAGE/usr/share/icons/"
-mkdir -p "$STAGE/usr/share/doc/gridcraft"
-copy_docs "$STAGE/usr/share/doc/gridcraft"
+for size in 16 24 32 48 64 128 256 512; do
+  install -Dm644 "$ROOT/assets/omagrid-icon/$size/$APP_ID.png" "$STAGE/usr/share/icons/hicolor/${size}x${size}/apps/$APP_ID.png"
+done
+install -Dm644 "$ROOT/assets/omagrid-icon/$APP_ID.svg" "$STAGE/usr/share/icons/hicolor/scalable/apps/$APP_ID.svg"
+mkdir -p "$STAGE/usr/share/doc/omagrid"
+copy_docs "$STAGE/usr/share/doc/omagrid"
+printf 'OmaGrid %s\nUpstream GridCraft %s\n' "$VERSION" "$UPSTREAM_VERSION" >"$STAGE/usr/share/doc/omagrid/VERSION.txt"
 
 if command -v desktop-file-validate >/dev/null; then
   desktop-file-validate "$STAGE/usr/share/applications/$APP_ID.desktop"
@@ -129,11 +133,11 @@ if has appimage; then
     printf '%s  %s\n' "$sha256" "$path" | sha256sum -c -
     return
   }
-  APPDIR="$WORK/GridCraft.AppDir"
+  APPDIR="$WORK/OmaGrid.AppDir"
   cp -R "$STAGE" "$APPDIR"
-  ln -s usr/bin/gridcraft "$APPDIR/AppRun"
+  ln -s usr/bin/omagrid "$APPDIR/AppRun"
   cp "$HERE/$APP_ID.desktop" "$APPDIR/$APP_ID.desktop"
-  cp "$ROOT/assets/app-icon/hicolor/256x256/apps/$APP_ID.png" "$APPDIR/$APP_ID.png"
+  cp "$ROOT/assets/omagrid-icon/256/$APP_ID.png" "$APPDIR/$APP_ID.png"
   ln -s "$APP_ID.png" "$APPDIR/.DirIcon"
 
   TOOL="${APPIMAGETOOL:-$(command -v appimagetool || true)}"
@@ -166,28 +170,15 @@ if has appimage; then
   RUNTIME="$(cd "$(dirname "$RUNTIME")" && pwd)/$(basename "$RUNTIME")"
   # A .zsync left by an earlier run would hide a missing zsyncmake and describe another file.
   rm -f "$OUT.zsync"
-  # Update information: AppImageUpdate, AppImageLauncher and the like read it from the file and
-  # fetch only the blocks that changed in a newer release, through the .zsync published next to
-  # each AppImage on GitHub Releases. `latest` is the newest published release that is not a
-  # pre-release. A fork's builds point at its own releases through GITHUB_REPOSITORY.
-  REPO="${GITHUB_REPOSITORY:-storytold/gridcraft}"
-  UPDATE_INFO="gh-releases-zsync|${REPO%%/*}|${REPO#*/}|latest|gridcraft-*-linux-$ARCH.AppImage.zsync"
-  # Extract-and-run: works without FUSE (containers, CI). The output embeds the static runtime,
-  # so users don't need libfuse2 either. With zsyncmake on the host (CI installs the zsync
-  # package) appimagetool also writes the .zsync, into its working directory, hence the cd.
-  (cd "$DIST" && ARCH="$ARCH" APPIMAGE_EXTRACT_AND_RUN=1 "$TOOL" --no-appstream --runtime-file "$RUNTIME" -u "$UPDATE_INFO" "$APPDIR" "$OUT")
+  # Development packages have no embedded updater endpoint. Install a reviewed OmaGrid build.
+  (cd "$DIST" && ARCH="$ARCH" APPIMAGE_EXTRACT_AND_RUN=1 "$TOOL" --no-appstream --runtime-file "$RUNTIME" "$APPDIR" "$OUT")
   echo "wrote $OUT"
-  if [[ -s "$OUT.zsync" ]]; then
-    echo "wrote $OUT.zsync"
-  else
-    warn "zsyncmake not found, so $OUT.zsync was not written; AppImage delta updates need it"
-  fi
 fi
 
 if [[ -z "${CROSS_TARGET:-}" ]]; then
-  "$STAGE/usr/bin/gridcraft-cli" --version
+  "$STAGE/usr/bin/omagrid-cli" --version
 elif [[ -n "${EMULATOR:-}" ]]; then
-  "$EMULATOR" "$STAGE/usr/bin/gridcraft-cli" --version
+  "$EMULATOR" "$STAGE/usr/bin/omagrid-cli" --version
 fi
 echo "==> done"
 ls -lh "$DIST"

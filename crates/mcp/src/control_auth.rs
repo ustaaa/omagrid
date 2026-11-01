@@ -4,7 +4,7 @@
 //! reach a loopback port. So the first line of every connection must be
 //! `{"id":…,"method":"auth","params":{"token":"…"}}`, with the secret the app made at start. The
 //! app keeps it in memory and writes it to a file only the user can read (or the user chooses it
-//! with `GRIDCRAFT_CONTROL_TOKEN`); [`Remote`](crate::Remote) reads it from the same places.
+//! with `OMAGRID_CONTROL_TOKEN`); [`Remote`](crate::Remote) reads it from the same places. The upstream GridCraft token variable is not read, so a credential exported for GridCraft is never sent to OmaGrid.
 
 use std::path::PathBuf;
 
@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 
 /// Environment variable holding a token chosen by the user. The app uses it instead of making
 /// one (and writes no file); clients use it instead of reading the file.
-pub const TOKEN_ENV: &str = "GRIDCRAFT_CONTROL_TOKEN";
+pub const TOKEN_ENV: &str = "OMAGRID_CONTROL_TOKEN";
 /// The method of the handshake line.
 pub const AUTH_METHOD: &str = "auth";
 /// Shortest token the app accepts from the user (a made one has 256 bits).
@@ -69,15 +69,15 @@ pub fn check_first_line(line: &str, token: &str) -> Result<Value, Value> {
 }
 
 /// Where the app writes the token it made for `port`, and where clients look for it: a folder
-/// only the user can open (`$XDG_RUNTIME_DIR/gridcraft`, else `~/.cache/gridcraft`; on Windows
-/// `%USERPROFILE%\.gridcraft`), file `control-<port>.token`. `None` when no such folder is known.
+/// only the user can open (`$XDG_RUNTIME_DIR/omagrid`, else `~/.cache/omagrid`; on Windows
+/// `%USERPROFILE%\.omagrid`), file `control-<port>.token`. `None` when no such folder is known.
 pub fn token_path(port: u16) -> Option<PathBuf> {
     let dir = if cfg!(windows) {
-        PathBuf::from(std::env::var_os("USERPROFILE").filter(|v| !v.is_empty())?).join(".gridcraft")
+        PathBuf::from(std::env::var_os("USERPROFILE").filter(|v| !v.is_empty())?).join(".omagrid")
     } else if let Some(run) = std::env::var_os("XDG_RUNTIME_DIR").filter(|v| !v.is_empty()) {
-        PathBuf::from(run).join("gridcraft")
+        PathBuf::from(run).join("omagrid")
     } else {
-        PathBuf::from(std::env::var_os("HOME").filter(|v| !v.is_empty())?).join(".cache").join("gridcraft")
+        PathBuf::from(std::env::var_os("HOME").filter(|v| !v.is_empty())?).join(".cache").join("omagrid")
     };
     Some(dir.join(format!("control-{port}.token")))
 }
@@ -87,12 +87,20 @@ fn port_of(addr: &str) -> Option<u16> {
     addr.rsplit(':').next()?.parse().ok()
 }
 
+/// The token chosen with [`TOKEN_ENV`]. The automatically discovered token file is always in
+/// OmaGrid's private namespace too.
+pub fn configured_token() -> Option<String> {
+    configured_token_from(|name| std::env::var(name).ok())
+}
+
+fn configured_token_from(var: impl Fn(&str) -> Option<String>) -> Option<String> {
+    var(TOKEN_ENV).map(|s| s.trim().to_owned()).filter(|s| !s.is_empty())
+}
+
 /// The token a client uses for `addr`: [`TOKEN_ENV`] if set, else the file the app wrote.
 pub fn client_token(addr: &str) -> Result<String, String> {
-    if let Ok(t) = std::env::var(TOKEN_ENV)
-        && !t.trim().is_empty()
-    {
-        return Ok(t.trim().to_string());
+    if let Some(t) = configured_token() {
+        return Ok(t);
     }
     let path = port_of(addr).and_then(token_path).ok_or_else(|| format!("no control token: set {TOKEN_ENV}"))?;
     match std::fs::read_to_string(&path) {
@@ -132,4 +140,24 @@ pub fn write_token_file(port: u16, token: &str) -> std::io::Result<PathBuf> {
     f.write_all(token.as_bytes())?;
     f.write_all(b"\n")?;
     Ok(path)
+}
+
+#[cfg(test)]
+mod isolation_tests {
+    #[test]
+    fn automatic_tokens_never_use_the_upstream_namespace() {
+        let path = super::token_path(7979).expect("test host needs HOME, USERPROFILE or XDG_RUNTIME_DIR");
+        let directory = path.parent().and_then(|p| p.file_name()).and_then(|s| s.to_str());
+        assert_eq!(directory, Some(if cfg!(windows) { ".omagrid" } else { "omagrid" }));
+        assert_eq!(path.file_name().and_then(|s| s.to_str()), Some("control-7979.token"));
+        assert_eq!(super::TOKEN_ENV, "OMAGRID_CONTROL_TOKEN");
+    }
+
+    #[test]
+    fn an_upstream_token_is_never_used() {
+        let upstream = |name: &str| (name == "GRIDCRAFT_CONTROL_TOKEN").then(|| "upstream-secret".to_string());
+        assert_eq!(super::configured_token_from(upstream), None);
+        let ours = |name: &str| (name == "OMAGRID_CONTROL_TOKEN").then(|| " ours ".to_string());
+        assert_eq!(super::configured_token_from(ours).as_deref(), Some("ours"));
+    }
 }

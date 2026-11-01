@@ -46,7 +46,7 @@ pub fn tooltip_shortcut(tip: &str, mac: bool) -> Option<&'static str> {
 /// shows them ("Bold (Ctrl+B)" on Windows, "Bold (⌘B)" on macOS).
 fn tip_text(ui: &Ui, tip: &str) -> String {
     // A name shared with a two-line ribbon label (Czech "Automatický\nsoučet") reads as one line.
-    let name = tr(ui, tip).replace('\n', " ");
+    let name = i18n::current(ui.ctx()).product_label(tip).replace('\n', " ");
     let text = match tooltip_shortcut(tip, cfg!(target_os = "macos")) {
         Some(keys) => format!("{name} ({keys})"),
         None => name,
@@ -99,8 +99,8 @@ pub fn toggle_button(ui: &mut Ui, icon: Icon, on: bool, tip: &str) -> Response {
 /// Large ribbon button: 32px icon over a one- or two-line label.
 pub fn big_button(ui: &mut Ui, icon: Icon, label: &str, tip: &str, dropdown: bool) -> Response {
     let t = Tokens::get(ui.ctx());
-    let label = tr(ui, label);
-    let (lines, w) = big_label(ui, label, dropdown);
+    let label = i18n::current(ui.ctx()).product_label(label);
+    let (lines, w) = big_label(ui, &label, dropdown);
     let (rect, resp) = ui.allocate_exact_size(vec2(w, 72.0), Sense::click());
     if resp.is_pointer_button_down_on() {
         ui.painter().rect_filled(rect, 5.0, t.pressed);

@@ -22,15 +22,19 @@ use egui::{Color32, FontData, FontDefinitions, FontFamily, FontId, Stroke, Visua
 
 mod font_fallback;
 mod font_setup;
+mod omarchy;
+pub use omarchy::set_omarchy_palette;
+pub(crate) use omarchy::{refresh_omarchy_fonts, with_omarchy_fonts};
 
 pub use font_fallback::symbol_face_installed;
 #[cfg(test)]
 use font_fallback::{cjk_han_japanese, cjk_han_simplified, cjk_hangul, fallback_faces, hebrew, lao, symbols_more, thai};
 use font_setup::pick;
 pub use font_setup::{
-    CELL, CELL_BOLD, CELL_BOLD_ITALIC, CELL_ITALIC, CraftFont, HanOrder, MONO, SERIF, UI, UI_BOLD, available_text, cell_family, cell_text_width,
-    chinese_font_loaded, craft_font_scripts, craft_fonts_cover, craft_fonts_loaded, craft_fonts_required, font_definitions,
-    font_definitions_for_language, font_definitions_with, pinned_font_definitions, symbol_fallback, ui_bold, ui_font,
+    CELL, CELL_BOLD, CELL_BOLD_ITALIC, CELL_ITALIC, CraftFont, DOCUMENT_UI, DOCUMENT_UI_BOLD, HanOrder, MONO, SERIF, UI, UI_BOLD, available_text,
+    cell_family, cell_text_width, chinese_font_loaded, craft_font_scripts, craft_fonts_cover, craft_fonts_loaded, craft_fonts_required,
+    document_ui_bold, document_ui_font, font_definitions, font_definitions_for_language, font_definitions_with, pinned_font_definitions,
+    symbol_fallback, ui_bold, ui_font,
 };
 #[cfg(test)]
 use font_setup::{candidates, craft_font_faces, try_load};
@@ -226,7 +230,7 @@ impl Tokens {
     }
 
     pub fn get(ctx: &egui::Context) -> Tokens {
-        if ctx.global_style().visuals.dark_mode { Tokens::dark() } else { Tokens::light() }
+        omarchy::resolved(ctx, ctx.global_style().visuals.dark_mode)
     }
 
     /// One colour of the category palette.
@@ -261,7 +265,7 @@ pub fn apply(ctx: &egui::Context, dark: bool) {
     // Install both palettes before System can switch between the style slots.
     for theme in [egui::Theme::Light, egui::Theme::Dark] {
         let dark = theme == egui::Theme::Dark;
-        let t = if dark { Tokens::dark() } else { Tokens::light() };
+        let t = omarchy::resolved(ctx, dark);
         let mut v = if dark { Visuals::dark() } else { Visuals::light() };
         v.panel_fill = t.window;
         v.window_fill = t.menu_bg;

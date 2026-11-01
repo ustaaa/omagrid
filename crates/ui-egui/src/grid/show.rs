@@ -675,10 +675,12 @@ pub(crate) fn paint_overlays(input: OverlayInput<'_>) {
             |ui| {
                 egui::Frame::popup(ui.style()).fill(Color32::from_rgb(0xFF, 0xFF, 0xE1)).show(ui, |ui| {
                     ui.set_max_width(220.0);
+                    let size = ui.style().text_styles.get(&egui::TextStyle::Body).map_or(13.0, |font| font.size);
+                    let font = theme::document_ui_font(size);
                     if !dv.input_title.is_empty() {
-                        ui.label(egui::RichText::new(&dv.input_title).strong().color(Color32::BLACK));
+                        ui.label(egui::RichText::new(&dv.input_title).font(font.clone()).strong().color(Color32::BLACK));
                     }
-                    ui.label(egui::RichText::new(&dv.input_message).color(Color32::BLACK));
+                    ui.label(egui::RichText::new(&dv.input_message).font(font).color(Color32::BLACK));
                 });
             },
         );
@@ -703,11 +705,13 @@ pub(crate) fn paint_overlays(input: OverlayInput<'_>) {
             |ui| {
                 egui::Frame::popup(ui.style()).fill(if cm.threaded { Color32::WHITE } else { Color32::from_rgb(0xFF, 0xFF, 0xE1) }).show(ui, |ui| {
                     ui.set_max_width(240.0);
-                    ui.label(egui::RichText::new(format!("{}:", cm.author)).strong().color(Color32::BLACK));
-                    ui.label(egui::RichText::new(&cm.text).color(Color32::BLACK));
+                    let size = ui.style().text_styles.get(&egui::TextStyle::Body).map_or(13.0, |font| font.size);
+                    let font = theme::document_ui_font(size);
+                    ui.label(egui::RichText::new(format!("{}:", cm.author)).font(font.clone()).strong().color(Color32::BLACK));
+                    ui.label(egui::RichText::new(&cm.text).font(font.clone()).color(Color32::BLACK));
                     for (a, t) in &cm.replies {
                         ui.separator();
-                        ui.label(egui::RichText::new(format!("{a}: {t}")).color(Color32::BLACK));
+                        ui.label(egui::RichText::new(format!("{a}: {t}")).font(font.clone()).color(Color32::BLACK));
                     }
                 });
             },

@@ -62,6 +62,8 @@ impl SheetApp {
             effective_dark: false,
             desktop_theme: desktop_theme::DesktopTheme::default(),
             desktop_dark: None,
+            omarchy: Default::default(),
+            omarchy_snapshot: Default::default(),
             name_box: None,
             keytips: keytips::KeyTips::default(),
             shots: control::Shots::default(),
@@ -95,7 +97,7 @@ impl SheetApp {
 
     /// Sets up fonts and visuals for a specific persisted interface language.
     pub fn setup_context_for_language(ctx: &egui::Context, dark: bool, language: i18n::Language) {
-        ctx.set_fonts(theme::font_definitions_for_language(language));
+        ctx.set_fonts(theme::with_omarchy_fonts(ctx, theme::font_definitions_for_language(language)));
         theme::apply(ctx, dark);
     }
 
@@ -109,7 +111,8 @@ impl SheetApp {
         let open: Vec<u64> = self.session.documents().iter().map(|d| d.uid).collect();
         floating_pictures::forget_closed(ctx, &open);
         self.apply_font_state(ctx);
-        if let Some(answer) = self.desktop_theme.take_change() {
+        self.sync_omarchy(ctx);
+        if let Some(answer) = self.desktop_theme.take_change(ctx, self.ui.system_theme) {
             self.desktop_dark = Some(answer);
         }
         self.sync_theme_preference(ctx);

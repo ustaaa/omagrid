@@ -750,13 +750,13 @@ pub fn export_as(app: &mut SheetApp, fmt: &str) -> bool {
         return match app.run(id, json!({"path": path})) {
             Ok(_) => true,
             Err(e) => {
-                app.message = Some(("GridCraft".into(), crate::clean_error(&e)));
+                app.message = Some(("OmaGrid".into(), crate::clean_error(&e)));
                 false
             }
         };
     }
     if app.services.download.is_none() {
-        app.message = Some(("GridCraft".into(), "Exporting needs a file picker, which this window doesn't have.".into()));
+        app.message = Some(("OmaGrid".into(), "Exporting needs a file picker, which this window doesn't have.".into()));
         return false;
     }
     if fmt == "pdf" {
@@ -764,7 +764,7 @@ pub fn export_as(app: &mut SheetApp, fmt: &str) -> bool {
         return match app.run(id, json!({})) {
             Ok(_) => true,
             Err(e) => {
-                app.message = Some(("GridCraft".into(), crate::clean_error(&e)));
+                app.message = Some(("OmaGrid".into(), crate::clean_error(&e)));
                 false
             }
         };
@@ -783,7 +783,7 @@ pub fn export_as(app: &mut SheetApp, fmt: &str) -> bool {
             }
         }
         Err(e) => {
-            app.message = Some(("GridCraft".into(), crate::clean_error(&e)));
+            app.message = Some(("OmaGrid".into(), crate::clean_error(&e)));
             false
         }
     }
@@ -794,12 +794,21 @@ fn account(app: &mut SheetApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let lang = app.ui.language;
     section(ui, lang, "Product Information");
-    ui.label(RichText::new("GridCraft").font(theme::ui_bold(16.0)).color(t.text));
+    ui.label(RichText::new("OmaGrid").font(theme::ui_bold(16.0)).color(t.text));
     ui.add_space(8.0);
     egui::Grid::new("backstage_account").num_columns(2).spacing(vec2(18.0, 8.0)).show(ui, |ui| {
-        for (label, value) in
-            [("Version", env!("CARGO_PKG_VERSION").to_string()), ("Platform", platform()), ("Licence", env!("CARGO_PKG_LICENSE").to_string())]
-        {
+        for (label, value) in [
+            (
+                "Version",
+                format!(
+                    "{} (upstream GridCraft {})",
+                    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../OMA_VERSION")).trim_ascii(),
+                    env!("CARGO_PKG_VERSION")
+                ),
+            ),
+            ("Platform", platform()),
+            ("Licence", env!("CARGO_PKG_LICENSE").to_string()),
+        ] {
             ui.label(RichText::new(lang.tr(label)).color(t.text_dim));
             ui.label(value);
             ui.end_row();
@@ -807,13 +816,13 @@ fn account(app: &mut SheetApp, ui: &mut Ui) {
     });
     ui.add_space(18.0);
     ui.horizontal(|ui| {
-        if square_button(ui, Icon::Info, lang.tr("About GridCraft")).clicked() {
+        if square_button(ui, Icon::Info, &lang.product_label("About GridCraft")).clicked() {
             app.open_dialog("about", json!({}));
         }
         ui.add_space(12.0);
         ui.vertical(|ui| {
             ui.add_space(14.0);
-            ui.label(RichText::new(lang.tr("About GridCraft")).font(theme::ui_bold(13.5)).color(t.text));
+            ui.label(RichText::new(lang.product_label("About GridCraft")).font(theme::ui_bold(13.5)).color(t.text));
             dim(ui, lang.tr("Version, contributors and the AI models that helped"));
         });
     });

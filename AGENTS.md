@@ -1,4 +1,26 @@
+## OmaCraft lifecycle
+
+This repository is one component of https://github.com/ustaaa/omacraft.
+The owner authorized establishing fork commits, private coordination repositories and
+reviewable GitHub branches for the current lifecycle task. This supersedes older
+Nomura-only coordination and private-host CHECKPOINT requirements for that task.
+Preserve unrelated changes. No automatic merge, public release or visibility change.
+Use independent model review plus reproducible tests; see the suite review contract.
+Do not write machine addresses, credentials or private notebook content into tracked
+files. The constrained runtime test machine is not a build host: x86 builds run on
+the designated Linux build host. Keep runtime and build evidence separate.
+
 # GridCraft — instructions for agents
+
+## OmaGrid project override (user direction, 2026-10-29)
+
+This fork is OmaGrid. The current pilot branch is `codex/omarchy-ui`.
+The user explicitly removed the Nomura review/commit prerequisite for this project:
+Codex may review, commit, push this working branch, install and test the pilot.
+This supersedes the parent workspace's Nomura-only workflow for OmaGrid only.
+Preserve the existing ribbon and Excel-oriented behavior, upstream engine/file layers,
+dependency pins and parallel GridCraft installation. Read `HANDOFF.md` and
+`docs/omagrid-upstream.md` for current scope and outstanding acceptance gates.
 
 GridCraft is a clean-room, open-source, Rust-native spreadsheet targeting Microsoft Excel parity — and superiority (speed, openness, agent control). It runs natively on macOS, Windows, Linux and BSD, and on the web via WASM. Siblings with the same conventions: `../designcraft` (InDesign-class, the closest reference), `../photocraft` (Photoshop), `../vectorcraft` (Illustrator), `../pdfcraft` (Acrobat), `../filmcraft` (Premiere), `../lightcraft` (Lightroom), `../effectcraft` (After Effects).
 
@@ -43,7 +65,7 @@ People trust GridCraft with their numbers; a crash loses their work. **This outr
 
 ## Running and looking at the app
 - `cargo run --release -p gridcraft -- --sample sales --control 7979` (sample workbook + control channel).
-- Drive it: `gridcraft-cli send 7979 <method> '<json>'` (reads the token file the app printed on stderr), or JSON lines on `127.0.0.1:7979` whose first line is `{"id":0,"method":"auth","params":{"token":"…"}}` (token: `$XDG_RUNTIME_DIR/gridcraft/control-7979.token`, or your own `GRIDCRAFT_CONTROL_TOKEN`), e.g. `{"id":1,"method":"engine.execute","params":{"command":"cell.set","params":{"cell":"B2","input":"=SUM(A1:A9)"}}}` then `{"id":2,"method":"ui.screenshot","params":{"path":"/tmp/shot.png"}}`. Methods: `crates/ui-egui/src/control.rs`, docs: `docs/control-protocol.md`.
+- Drive it: `gridcraft-cli send 7979 <method> '<json>'` (reads the token file the app printed on stderr), or JSON lines on `127.0.0.1:7979` whose first line is `{"id":0,"method":"auth","params":{"token":"…"}}` (token: `$XDG_RUNTIME_DIR/gridcraft/control-7979.token`, or your own `OMAGRID_CONTROL_TOKEN`), e.g. `{"id":1,"method":"engine.execute","params":{"command":"cell.set","params":{"cell":"B2","input":"=SUM(A1:A9)"}}}` then `{"id":2,"method":"ui.screenshot","params":{"path":"/tmp/shot.png"}}`. Methods: `crates/ui-egui/src/control.rs`, docs: `docs/control-protocol.md`.
 - **Offscreen UI render** (no window, from a source checkout): `cargo run -p gridcraft-ui-egui --example snapshot -- --sample sales out.png`.
 - Headless: `gridcraft-cli eval '=SUM(1,2,3)'`, `gridcraft-cli run --in book.xlsx --cmd 'home.bold={"range":"A1:C1"}' --out book.xlsx`, `gridcraft-cli mcp`.
 - **For UI work, look at the result** (snapshot PNG) and compare with `plan/excel/observed-ui.md`.
@@ -70,3 +92,7 @@ People trust GridCraft with their numbers; a crash loses their work. **This outr
   GitHub profiles). Never hand-edit `contributors.json`.
 - Maintainers refresh the stats with `python3 ../../craftrules/scripts/contributors.py .` (it also
   re-verifies who wrote each `people.toml` entry; `--check` only verifies).
+
+## Cost-aware delegation
+
+For routine coding, identity renames, packaging, test helpers, and documentation, delegate to Halogen or another explicitly selected lower-cost subagent. Reserve Astra for architecture, difficult debugging, and final review when needed. Subagents inherit the parent model unless explicitly selected, so always specify the intended lower-cost model for routine work. Verify generated changes and tests. If Halogen is unavailable, do independent useful work or use a suitable lower-cost alternative, and report the limitation; do not silently move bulk work to a costly model. Do not change providers, global defaults, or infrastructure.
