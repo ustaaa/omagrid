@@ -64,3 +64,30 @@ separately. Linux packages use the downstream label and include `VERSION.txt` wi
 versions. Cargo package versions and lockfile are unchanged. Rust builds/runtime and
 package artifact verification are delegated to Halo; local formatting, shell syntax and
 diff whitespace checks passed.
+
+### GridCraft v0.14.2 integration candidate (2026-11-01)
+Isolated branch `codex/upstream-grid-0.14.2` starts at OmaGrid alpha 1
+`57822142c80bb6f3b08b8d5af0ca17107e963e58` and merges upstream tag `v0.14.2`,
+resolved to `55850841d39f030fb42f0a07e54903decea7b067`. Downstream version label is
+`0.14.2-oma.1.alpha.1`; suite tracking target is nextalpha2. The ribbon and Omarchy
+chrome/theme/font paths and upstream isolation of control/auth variables remain in the
+merged tree. Upstream adds macro authoring, workbook author metadata, drag/drop handling,
+and CUPS print support. The old unused macros dialog was removed in favor of upstream's
+new macro UI/editor.
+
+Eight merge conflicts were resolved in AGENTS.md, Cargo.lock, apps/gridcraft/src/main.rs,
+apps/gridcraft/tests/mac_menu_appkit.rs, crates/ui-egui/src/dialogs/macros.rs,
+crates/ui-egui/src/updates_ui.rs and the two OmaGrid Flatpak manifests. Updater behavior
+remains package-managed: no upstream startup check or binary replacement helper; the
+existing manual command displays the OmaGrid policy notice. Removed the now-unused
+craft-update workspace dependency and lock references. Flatpak manifests retain the Oma
+application ID, Omarchy palette access and offline runtime policy; they include the new
+CUPS tools/socket integration without `--share=network`.
+
+`cargo fmt --all -- --check`, `git diff --check HEAD` and
+`cargo metadata --no-deps --format-version 1 --offline` passed. Rust compilation,
+component tests, package builds, and Halo runtime checks were not run here; root handles
+the component gates. Cargo offline lock regeneration was unavailable because the local
+crates.io index lacks `sha1`; the upstream lock was retained with the unused updater
+package references removed. Local merge commit `23ee2555349695d71d3e94ee8e277fd2343a934d`
+is ready for root review; it has not been pushed.
